@@ -86,20 +86,20 @@ export class UserModel {
     target.role = newRole;
   }
 
-  public updateName(newName: NameValueObject) {
-    this.name = newName;
+  public updateName(newName: string) {
+    this.name = NameValueObject.create(newName);
   }
 
-  public updateSurname(newSurname: SurnameValueObject) {
-    this.surname = newSurname;
+  public updateSurname(newSurname: string) {
+    this.surname = SurnameValueObject.create(newSurname);
   }
 
-  public updateEmail(newEmail: EmailValueObject) {
-    this.email = newEmail;
+  public updateEmail(newEmail: string) {
+    this.email = EmailValueObject.create(newEmail);
   }
 
-  public updateUsername(newUsername: UsernameValueObject) {
-    this.username = newUsername;
+  public updateUsername(newUsername: string) {
+    this.username = UsernameValueObject.create(newUsername);
   }
 
   public updatePhoneNumber(newPhoneNumber: string | null) {
