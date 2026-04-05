@@ -4,17 +4,21 @@ import { SurnameValueObject } from './value-objects/surname.value-object';
 import { EmailValueObject } from './value-objects/email.value-object';
 import { UsernameValueObject } from './value-objects/username.value-object';
 import { UserCreationRawData } from './types/user-creation-raw-data.type';
+import { UserIdValueObject } from './value-objects/user-id.value-object';
+import { UserRoleValueObject } from './value-objects/user-role.value-object';
 
-export class UserModel {
+export class User {
+  private id: UserIdValueObject;
   private name: NameValueObject;
   private surname: SurnameValueObject;
   private email: EmailValueObject;
   private phoneNumber: string | null;
   private username: UsernameValueObject;
   private hashedPassword: string;
-  private role: 'member' | 'employee' | 'roleManager';
+  private role: UserRoleValueObject;
 
   private constructor(props: UserProps) {
+    this.id = props.id;
     this.name = props.name;
     this.surname = props.surname;
     this.email = props.email;
@@ -26,16 +30,21 @@ export class UserModel {
 
   public static create(raw: UserCreationRawData) {
     const props: UserProps = {
+      id: UserIdValueObject.generate(),
       name: NameValueObject.create(raw.name),
       surname: SurnameValueObject.create(raw.surname),
       email: EmailValueObject.create(raw.email),
       username: UsernameValueObject.create(raw.username),
       hashedPassword: raw.hashedPassword,
       phoneNumber: raw.phoneNumber,
-      role: raw.role,
+      role: UserRoleValueObject.create(raw.role),
     };
 
-    return new UserModel(props);
+    return new User(props);
+  }
+
+  public getId() {
+    return this.id;
   }
 
   public getName() {
@@ -67,18 +76,18 @@ export class UserModel {
   }
 
   public isRoleManager() {
-    return this.role === 'roleManager';
+    return this.role.isRoleManager();
   }
 
   public isEmployee() {
-    return this.role === 'employee';
+    return this.role.isEmployee();
   }
 
   public isMember() {
-    return this.role === 'member';
+    return this.role.isMember();
   }
 
-  public changeRoleOf(target: UserModel, newRole: 'member' | 'employee' | 'roleManager') {
+  public changeRoleOf(target: User, newRole: UserRoleValueObject) {
     if (!this.isRoleManager()) {
       throw new Error('Only a roleManager can change roles');
     }
@@ -108,5 +117,9 @@ export class UserModel {
 
   public updateHashedPassword(newHashedPassword: string) {
     this.hashedPassword = newHashedPassword;
+  }
+
+  public equals(other: User) {
+    return this.id.equals(other.id);
   }
 }
