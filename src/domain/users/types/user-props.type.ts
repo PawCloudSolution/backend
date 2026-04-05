@@ -10,8 +10,8 @@ export type UserProps = {
   name: NameValueObject;
   surname: SurnameValueObject;
   email: EmailValueObject;
+  phoneNumber: string | null;
   username: UsernameValueObject;
   hashedPassword: string;
-  phoneNumber: string | null;
   role: UserRoleValueObject;
 };
