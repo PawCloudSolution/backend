@@ -7,6 +7,8 @@ import { UsernameValueObject } from './value-objects/username.value-object';
 import { UserIdValueObject } from './value-objects/user-id.value-object';
 import { UserRoleValueObject } from './value-objects/user-role.value-object';
 import { UserRestoreRawData } from './types/user-restore-raw-data.type';
+import { PasswordHashValueObject } from './value-objects/password-hash.value-object';
+import { PhoneNumberValueObject } from './value-objects/phone-number.value-object';
 
 export class User {
   private id: UserIdValueObject;
@@ -15,8 +17,8 @@ export class User {
   private email: EmailValueObject;
   private username: UsernameValueObject;
   private role: UserRoleValueObject;
-  private hashedPassword: string;
-  private phoneNumber: string | null;
+  private phoneNumber: PhoneNumberValueObject;
+  private hashedPassword: PasswordHashValueObject;
 
   private constructor(props: UserProps) {
     this.id = props.id;
@@ -35,10 +37,10 @@ export class User {
       name: NameValueObject.create(raw.name),
       surname: SurnameValueObject.create(raw.surname),
       email: EmailValueObject.create(raw.email),
-      phoneNumber: raw.phoneNumber,
       username: UsernameValueObject.create(raw.username),
-      hashedPassword: raw.hashedPassword,
       role: UserRoleValueObject.create(raw.role),
+      phoneNumber: PhoneNumberValueObject.create(raw.phoneNumber),
+      hashedPassword: PasswordHashValueObject.create(raw.hashedPassword),
     };
 
     return new User(props);
@@ -50,10 +52,10 @@ export class User {
       name: NameValueObject.create(raw.name),
       surname: SurnameValueObject.create(raw.surname),
       email: EmailValueObject.create(raw.email),
-      phoneNumber: raw.phoneNumber,
       username: UsernameValueObject.create(raw.username),
-      hashedPassword: raw.hashedPassword,
       role: UserRoleValueObject.create(raw.role),
+      phoneNumber: PhoneNumberValueObject.create(raw.phoneNumber),
+      hashedPassword: PasswordHashValueObject.create(raw.hashedPassword),
     };
 
     return new User(props);
@@ -80,7 +82,7 @@ export class User {
   }
 
   public getPhoneNumber(): string | null {
-    return this.phoneNumber;
+    return this.phoneNumber.toString();
   }
 
   public getRole(): UserRoleValueObject {
@@ -88,7 +90,7 @@ export class User {
   }
 
   public getHashedPassword(): string {
-    return this.hashedPassword;
+    return this.hashedPassword.toString();
   }
 
   public isRoleManager(): boolean {
@@ -103,12 +105,20 @@ export class User {
     return this.role.isMember();
   }
 
-  public changeRoleOf(target: User, newRole: UserRoleValueObject): void {
-    if (!this.isRoleManager()) {
+  public changeRoleBy(actor: User, newRole: UserRoleValueObject): void {
+    if (!actor.isRoleManager()) {
       throw new Error('Only a roleManager can change roles');
     }
 
-    target.role = newRole;
+    if (this.equals(actor)) {
+      throw new Error('User cannot change own role');
+    }
+
+    if (this.role.equals(newRole)) {
+      throw new Error('User already has this role');
+    }
+
+    this.role = newRole;
   }
 
   public updateName(newName: string): void {
@@ -128,11 +138,11 @@ export class User {
   }
 
   public updatePhoneNumber(newPhoneNumber: string | null): void {
-    this.phoneNumber = newPhoneNumber;
+    this.phoneNumber = PhoneNumberValueObject.create(newPhoneNumber);
   }
 
   public updateHashedPassword(newHashedPassword: string): void {
-    this.hashedPassword = newHashedPassword;
+    this.hashedPassword = PasswordHashValueObject.create(newHashedPassword);
   }
 
   public equals(other: User): boolean {
