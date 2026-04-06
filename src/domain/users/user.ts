@@ -13,10 +13,10 @@ export class User {
   private name: NameValueObject;
   private surname: SurnameValueObject;
   private email: EmailValueObject;
-  private phoneNumber: string | null;
   private username: UsernameValueObject;
-  private hashedPassword: string;
   private role: UserRoleValueObject;
+  private hashedPassword: string;
+  private phoneNumber: string | null;
 
   private constructor(props: UserProps) {
     this.id = props.id;
