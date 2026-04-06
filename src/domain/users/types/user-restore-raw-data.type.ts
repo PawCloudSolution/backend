@@ -1,4 +1,5 @@
-export type UserCreationRawData = {
+export type UserRestoreRawData = {
+  id: string;
   name: string;
   surname: string;
   email: string;
