@@ -3,7 +3,7 @@ import { ExternalPersonProps } from './types/external-person-props.type';
 import { ExternalPersonNameValueObject } from './value-objects/external-person-name.value-object';
 import { ExternalPersonSurnameValueObject } from './value-objects/external-person-surname.value-object';
 
-export class ExternalPersonModel {
+export class ExternalPerson {
   private name: ExternalPersonNameValueObject;
   private surname: ExternalPersonSurnameValueObject;
   private phoneNumber: string | null;
@@ -24,7 +24,7 @@ export class ExternalPersonModel {
       type: raw.type,
     };
 
-    return new ExternalPersonModel(props);
+    return new ExternalPerson(props);
   }
 
   public getName() {

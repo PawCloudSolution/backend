@@ -6,13 +6,17 @@ import { UserIdValueObject } from '../value-objects/user-id.value-object';
 import { UserRoleValueObject } from '../value-objects/user-role.value-object';
 import { PhoneNumberValueObject } from '../value-objects/phone-number.value-object';
 import { PasswordHashValueObject } from '../value-objects/password-hash.value-object';
+import { CountryCodeValueObject } from '../../shared/value-objects/country-code.value-object';
+import { OrganizationIdValueObject } from '../../organization/value-objects/organization-id.value-object';
 
 export type UserProps = {
   id: UserIdValueObject;
+  organizationId: OrganizationIdValueObject;
   name: NameValueObject;
   surname: SurnameValueObject;
   email: EmailValueObject;
   phoneNumber: PhoneNumberValueObject;
+  countryCode: CountryCodeValueObject;
   username: UsernameValueObject;
   hashedPassword: PasswordHashValueObject;
   role: UserRoleValueObject;

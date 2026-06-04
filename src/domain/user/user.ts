@@ -9,37 +9,47 @@ import { UserRoleValueObject } from './value-objects/user-role.value-object';
 import { UserRestoreRawData } from './types/user-restore-raw-data.type';
 import { PasswordHashValueObject } from './value-objects/password-hash.value-object';
 import { PhoneNumberValueObject } from './value-objects/phone-number.value-object';
+import { CountryCodeValueObject } from '../shared/value-objects/country-code.value-object';
+import { OrganizationIdValueObject } from '../organization/value-objects/organization-id.value-object';
 
 export class User {
   private id: UserIdValueObject;
+  private organizationId: OrganizationIdValueObject;
   private name: NameValueObject;
   private surname: SurnameValueObject;
   private email: EmailValueObject;
   private username: UsernameValueObject;
   private role: UserRoleValueObject;
   private phoneNumber: PhoneNumberValueObject;
+  private countryCode: CountryCodeValueObject;
   private hashedPassword: PasswordHashValueObject;
 
   private constructor(props: UserProps) {
     this.id = props.id;
+    this.organizationId = props.organizationId;
     this.name = props.name;
     this.surname = props.surname;
     this.email = props.email;
     this.phoneNumber = props.phoneNumber;
+    this.countryCode = props.countryCode;
     this.username = props.username;
     this.hashedPassword = props.hashedPassword;
     this.role = props.role;
   }
 
   public static register(raw: UserCreationRawData): User {
+    const countryCodeVO = CountryCodeValueObject.create(raw.countryCode);
+
     const props: UserProps = {
       id: UserIdValueObject.generate(),
+      organizationId: OrganizationIdValueObject.create(raw.organizationId),
       name: NameValueObject.create(raw.name),
       surname: SurnameValueObject.create(raw.surname),
       email: EmailValueObject.create(raw.email),
       username: UsernameValueObject.create(raw.username),
       role: UserRoleValueObject.create(raw.role),
-      phoneNumber: PhoneNumberValueObject.create(raw.phoneNumber),
+      countryCode: countryCodeVO,
+      phoneNumber: PhoneNumberValueObject.create(raw.phoneNumber, countryCodeVO),
       hashedPassword: PasswordHashValueObject.create(raw.hashedPassword),
     };
 
@@ -47,22 +57,30 @@ export class User {
   }
 
   public static restore(raw: UserRestoreRawData): User {
+    const countryCodeVO = CountryCodeValueObject.create(raw.countryCode);
+
     const props: UserProps = {
       id: UserIdValueObject.create(raw.id),
+      organizationId: OrganizationIdValueObject.create(raw.organizationId),
       name: NameValueObject.create(raw.name),
       surname: SurnameValueObject.create(raw.surname),
       email: EmailValueObject.create(raw.email),
       username: UsernameValueObject.create(raw.username),
       role: UserRoleValueObject.create(raw.role),
-      phoneNumber: PhoneNumberValueObject.create(raw.phoneNumber),
+      countryCode: countryCodeVO,
+      phoneNumber: PhoneNumberValueObject.create(raw.phoneNumber, countryCodeVO),
       hashedPassword: PasswordHashValueObject.create(raw.hashedPassword),
     };
 
     return new User(props);
   }
 
-  public getId(): UserIdValueObject {
-    return this.id;
+  public getId(): string {
+    return this.id.toString();
+  }
+
+  public getOrganizationId(): string {
+    return this.organizationId.toString();
   }
 
   public getName(): string {
@@ -137,8 +155,9 @@ export class User {
     this.username = UsernameValueObject.create(newUsername);
   }
 
-  public updatePhoneNumber(newPhoneNumber: string | null): void {
-    this.phoneNumber = PhoneNumberValueObject.create(newPhoneNumber);
+  public updatePhoneNumber(newPhoneNumber: string | null, newCountryCode: string): void {
+    this.countryCode = CountryCodeValueObject.create(newCountryCode);
+    this.phoneNumber = PhoneNumberValueObject.create(newPhoneNumber, this.countryCode);
   }
 
   public updateHashedPassword(newHashedPassword: string): void {
