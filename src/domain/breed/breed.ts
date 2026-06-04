@@ -1,9 +1,10 @@
 import { BreedProps } from './types/BreedProps';
-import { v4 as uuid } from 'uuid';
+import { BreedIdValueObject } from './value-objects/breed-id.value-object';
+import { BreedNameValueObject } from './value-objects/breed-name.value-object';
 
-export class BreedModel {
-  private readonly id: string;
-  private readonly names: { [languageCode: string]: string };
+export class Breed {
+  private readonly id: BreedIdValueObject;
+  private readonly names: { [languageCode: string]: BreedNameValueObject };
   private readonly createdAt: Date;
   private updatedAt: Date;
 
@@ -19,19 +20,14 @@ export class BreedModel {
       throw new Error('English name (names.en) is required');
     }
 
+    const nameVOs: { [languageCode: string]: BreedNameValueObject } = {};
     for (const lang in names) {
-      const trimmed = names[lang].trim();
-
-      if (trimmed.length < 2) {
-        throw new Error(`Name for language "${lang}" must be at least 2 characters long`);
-      }
-
-      names[lang] = trimmed;
+      nameVOs[lang] = BreedNameValueObject.create(names[lang]);
     }
 
-    return new BreedModel({
-      id: uuid(),
-      names,
+    return new Breed({
+      id: BreedIdValueObject.generate(),
+      names: nameVOs,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -39,26 +35,14 @@ export class BreedModel {
 
   public update(updates: { [languageCode: string]: string }) {
     for (const lang in updates) {
-      const trimmed = updates[lang].trim();
-
-      if (trimmed.length < 2) {
-        throw new Error(`Name for language "${lang}" must be at least 2 characters long`);
-      }
-
-      this.names[lang] = trimmed;
+      this.names[lang] = BreedNameValueObject.create(updates[lang]);
     }
 
     this.updatedAt = new Date();
   }
 
   public addLanguage(languageCode: string, value: string) {
-    const trimmed = value.trim();
-
-    if (trimmed.length < 2) {
-      throw new Error(`Name for language "${languageCode}" must be at least 2 characters long`);
-    }
-
-    this.names[languageCode] = trimmed;
+    this.names[languageCode] = BreedNameValueObject.create(value);
     this.updatedAt = new Date();
   }
 
@@ -76,11 +60,16 @@ export class BreedModel {
   }
 
   public getNames() {
-    return this.names;
+    const rawNames: { [lang: string]: string } = {};
+    for (const lang in this.names) {
+      rawNames[lang] = this.names[lang].toString();
+    }
+    return rawNames;
   }
 
   public getName(lang: string) {
-    return this.names[lang] ?? this.names['en'];
+    const nameVO = this.names[lang] ?? this.names['en'];
+    return nameVO.toString();
   }
 
   public getCreatedAt() {

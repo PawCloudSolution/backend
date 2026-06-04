@@ -5,11 +5,15 @@ export class SexValueObject {
     this.value = v;
   }
 
-  public static create(sex: string): 'male' | 'female' {
+  public static create(sex: string): SexValueObject {
     if (sex !== 'male' && sex !== 'female') {
       throw new Error('The dog must be a female or a male');
     }
 
-    return new SexValueObject(sex).value;
+    return new SexValueObject(sex);
+  }
+
+  public toString() {
+    return this.value;
   }
 }
