@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class CreateBranchDtoHttp {
+export class CreateClubDtoHttp {
   @ApiProperty({ example: 'Paw Club Branch NY', type: String })
   name: string;
 
@@ -13,6 +13,6 @@ export class CreateBranchDtoHttp {
   @ApiPropertyOptional({ example: 'REG123456', type: String, nullable: true })
   registrationNumber?: string;
 
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'ID of the requester (president or superAdmin)', type: String })
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'ID of the requester (HQ president or superAdmin)', type: String })
   requesterId: string;
 }

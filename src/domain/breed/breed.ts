@@ -5,17 +5,19 @@ import { BreedNameValueObject } from './value-objects/breed-name.value-object';
 export class Breed {
   private readonly id: BreedIdValueObject;
   private readonly names: { [languageCode: string]: BreedNameValueObject };
+  private readonly internationalId: string;
   private readonly createdAt: Date;
   private updatedAt: Date;
 
   private constructor(props: BreedProps) {
     this.id = props.id;
     this.names = props.names;
+    this.internationalId = props.internationalId;
     this.createdAt = props.createdAt;
     this.updatedAt = props.updatedAt;
   }
 
-  public static create(names: { [languageCode: string]: string }) {
+  public static create(names: { [languageCode: string]: string }, internationalId: string) {
     if (!names.en) {
       throw new Error('English name (names.en) is required');
     }
@@ -28,6 +30,7 @@ export class Breed {
     return new Breed({
       id: BreedIdValueObject.generate(),
       names: nameVOs,
+      internationalId,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -42,6 +45,7 @@ export class Breed {
     return new Breed({
       id: BreedIdValueObject.create(raw.id),
       names: nameVOs,
+      internationalId: raw.internationalId,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     });
@@ -71,6 +75,10 @@ export class Breed {
 
   public getId() {
     return this.id;
+  }
+
+  public getInternationalId() {
+    return this.internationalId;
   }
 
   public getNames() {

@@ -70,36 +70,39 @@ describe('End-to-End User Flow', () => {
     superAdminId = res.body.user.id;
   });
 
-  it('3. should submit an application for a new Headquarter', async () => {
+  it('3. should submit an application for a new International org', async () => {
     const res = await request(app.getHttpServer())
-      .post('/api/v1/onboarding/hq/submit')
+      .post('/api/v1/internationals/submit')
       .send({
-        documents: ['doc1.pdf', 'doc2.pdf'],
-        organizationName: 'Global Paw Club',
+        documents: ['http://example.com/doc1.pdf'],
+        organizationName: 'Global Dogs Federation',
         countryCode: 'US',
-        taxNumber: 'TAX123456',
-        registrationNumber: 'REG123456',
+        taxNumber: '123456789',
+        registrationNumber: 'REG123',
         presidentName: 'John',
         presidentSurname: 'Doe',
-        presidentEmail: 'john.doe@globalpawclub.com',
-        presidentPhone: '+12025550199',
-        presidentPasswordPlain: 'presidentpass'
+        presidentEmail: 'john.doe@example.com',
+        presidentPhone: '+12025550123',
+        presidentPasswordPlain: 'securepassword123'
       });
 
     expect(res.status).toBe(201);
-    expect(res.body.id).toBeDefined();
+    expect(res.body).toHaveProperty('id');
     applicationId = res.body.id;
   });
 
   it('4. should approve the submitted application by the super admin', async () => {
+    expect(applicationId).toBeDefined();
+    expect(superAdminId).toBeDefined();
+
     const res = await request(app.getHttpServer())
-      .post('/api/v1/onboarding/hq/approve')
+      .post('/api/v1/internationals/approve')
       .send({
-        applicationId: applicationId,
+        applicationId,
         approverId: superAdminId
       });
 
-    expect(res.status).toBe(201); // default POST
+    expect(res.status).toBe(201);
     expect(res.body.message).toBe('Application approved');
   });
 
@@ -107,11 +110,11 @@ describe('End-to-End User Flow', () => {
     const res = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({
-        email: 'john.doe@globalpawclub.com',
-        password: 'presidentpass'
+        email: 'john.doe@example.com',
+        password: 'securepassword123'
       });
 
     expect(res.status).toBe(201);
-    expect(res.body.accessToken).toBeDefined();
+    expect(res.body.tokens.accessToken).toBeDefined();
   });
 });

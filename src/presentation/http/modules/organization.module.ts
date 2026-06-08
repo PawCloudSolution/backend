@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { OrganizationController } from '../controllers/organization.controller';
+import { ClubController } from '../controllers/club.controller';
 import { EmployeeController } from '../controllers/employee.controller';
 import { GetOrganizationsUseCase } from '../../../application/organization/use-cases/get-organizations.use-case';
 import { CreateBranchUseCase } from '../../../application/organization/use-cases/create-branch.use-case';
@@ -11,7 +11,7 @@ import { IUserRepository } from '../../../application/auth/ports/user.repository
 
 @Module({
   imports: [DatabaseModule],
-  controllers: [OrganizationController, EmployeeController],
+  controllers: [ClubController, EmployeeController],
   providers: [
     {
       provide: GetOrganizationsUseCase,

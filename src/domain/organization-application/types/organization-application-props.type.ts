@@ -24,4 +24,6 @@ export type OrganizationApplicationProps = {
   presidentEmail: EmailValueObject;
   presidentPhone: PhoneNumberValueObject;
   presidentPasswordHash: PasswordHashValueObject;
+  applicationType: 'international' | 'headquarter';
+  internationalId: string | null;
 };

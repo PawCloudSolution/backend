@@ -12,6 +12,7 @@ export class TypeOrmBreedApplicationRepository implements IBreedApplicationRepos
     entity.names = application.getNames();
     entity.status = application.getStatus();
     entity.requesterId = application.getRequesterId();
+    entity.internationalId = application.getInternationalId();
     entity.createdAt = application.getCreatedAt();
     await this.applicationRepository.save(entity);
   }
@@ -24,6 +25,7 @@ export class TypeOrmBreedApplicationRepository implements IBreedApplicationRepos
       names: entity.names,
       status: entity.status,
       requesterId: entity.requesterId,
+      internationalId: entity.internationalId,
       createdAt: entity.createdAt,
     });
   }
@@ -35,6 +37,7 @@ export class TypeOrmBreedApplicationRepository implements IBreedApplicationRepos
       names: entity.names,
       status: entity.status,
       requesterId: entity.requesterId,
+      internationalId: entity.internationalId,
       createdAt: entity.createdAt,
     }));
   }

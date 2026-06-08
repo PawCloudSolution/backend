@@ -15,6 +15,9 @@ export class BreedApplicationEntity {
   @Column({ name: 'requester_id', type: 'uuid' })
   requesterId: string;
 
+  @Column({ name: 'international_id', type: 'uuid' })
+  internationalId: string;
+
   @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'requester_id' })
   requester: UserEntity;

@@ -44,8 +44,31 @@ describe('Stage 3 Flow (E2E) - Dogs and Breeds', () => {
     const saRow = await AppDataSource.query(`SELECT id FROM users WHERE email = 'sa3@example.com'`);
     superAdminId = saRow[0].id;
 
-    // 2. Setup: Create HQ Application -> Approve it -> Get Club President ID & Org ID
-    const hqAppRes = await request(app.getHttpServer()).post('/api/v1/onboarding/hq/submit').send({
+    // 2. Setup: Create International Application -> Approve it
+    const intAppRes = await request(app.getHttpServer()).post('/api/v1/internationals/submit').send({
+      documents: ['http://example.com/doc.pdf'],
+      organizationName: 'Int Org',
+      countryCode: 'US',
+      taxNumber: 'INT1234',
+      registrationNumber: 'REGINT1234',
+      presidentName: 'Int',
+      presidentSurname: 'President',
+      presidentEmail: 'intp3@example.com',
+      presidentPhone: '+12025550188',
+      presidentPasswordPlain: 'password123'
+    });
+    if (intAppRes.status !== 201) throw new Error('Int submit failed: ' + JSON.stringify(intAppRes.body));
+    
+    await request(app.getHttpServer()).post('/api/v1/internationals/approve').send({
+      applicationId: intAppRes.body.id,
+      approverId: superAdminId
+    });
+
+    const intUserRow = await AppDataSource.query(`SELECT "organizationId" FROM users WHERE email = 'intp3@example.com'`);
+    const intOrgId = intUserRow[0].organizationId;
+
+    // 2.5 Setup: Create HQ Application -> Approve it -> Get Club President ID & Org ID
+    const hqAppRes = await request(app.getHttpServer()).post(`/api/v1/internationals/${intOrgId}/hqs/submit`).send({
       documents: ['http://example.com/doc.pdf'],
       organizationName: 'HQ Org',
       countryCode: 'US',
@@ -60,7 +83,7 @@ describe('Stage 3 Flow (E2E) - Dogs and Breeds', () => {
     if (hqAppRes.status !== 201) throw new Error('HQ submit failed: ' + JSON.stringify(hqAppRes.body));
     const hqAppId = hqAppRes.body.id;
 
-    const hqApproveRes = await request(app.getHttpServer()).post('/api/v1/onboarding/hq/approve').send({
+    const hqApproveRes = await request(app.getHttpServer()).post(`/api/v1/internationals/${intOrgId}/hqs/approve`).send({
       applicationId: hqAppId,
       approverId: superAdminId
     });
@@ -71,7 +94,7 @@ describe('Stage 3 Flow (E2E) - Dogs and Breeds', () => {
     const hqOrgId = hqUserRow[0].organizationId;
 
     // 3. Setup: Create a Club branch
-    const clubRes = await request(app.getHttpServer()).post(`/api/v1/organizations/${hqOrgId}/branches`).send({
+    const clubRes = await request(app.getHttpServer()).post(`/api/v1/hqs/${hqOrgId}/clubs`).send({
       name: 'Local Dog Club',
       countryCode: 'US',
       taxNumber: '9999',

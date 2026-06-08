@@ -35,7 +35,7 @@ export class LoginUserUseCase {
       user: {
         id: user.getId(),
         email: user.getEmail(),
-        role: user.getRole(),
+        role: user.getRole().toString(),
         organizationId: user.getOrganizationId()
       }
     };

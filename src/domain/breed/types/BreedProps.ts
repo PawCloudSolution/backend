@@ -4,6 +4,7 @@ import { BreedNameValueObject } from '../value-objects/breed-name.value-object';
 export type BreedProps = {
   id: BreedIdValueObject;
   names: { [languageCode: string]: BreedNameValueObject };
+  internationalId: string;
   createdAt: Date;
   updatedAt: Date;
 };

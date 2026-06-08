@@ -36,7 +36,26 @@ export class CreateBreedUseCase {
       }
     }
 
-    const breed = Breed.create(dto.names);
+    let internationalId: string | null = null;
+    let orgId = requester.getOrganizationId();
+    if (orgId) {
+      let currentOrg = await this.organizationRepository.findById(orgId);
+      while (currentOrg) {
+        if (currentOrg.getType() === 'international') {
+          internationalId = currentOrg.getId();
+          break;
+        }
+        const parentId = currentOrg.getParentOrganizationId();
+        if (!parentId) break;
+        currentOrg = await this.organizationRepository.findById(parentId);
+      }
+    }
+    
+    if (!internationalId) {
+      throw new Error('Cannot determine international organization context');
+    }
+
+    const breed = Breed.create(dto.names, internationalId);
     await this.breedRepository.save(breed);
     
     return breed;

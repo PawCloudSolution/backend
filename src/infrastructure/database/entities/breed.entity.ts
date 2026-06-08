@@ -8,6 +8,9 @@ export class BreedEntity {
   @Column({ type: 'jsonb' })
   names: Record<string, string>;
 
+  @Column({ name: 'international_id', type: 'uuid' })
+  internationalId: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

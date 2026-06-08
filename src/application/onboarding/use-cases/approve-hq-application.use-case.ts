@@ -4,7 +4,7 @@ import { IUserRepository } from '../../auth/ports/user.repository.interface';
 import { Organization } from '../../../domain/organization/organization';
 import { User } from '../../../domain/user/user';
 
-export class ApproveHqApplicationUseCase {
+export class ApproveOrganizationApplicationUseCase {
   constructor(
     private readonly applicationRepository: IOrganizationApplicationRepository,
     private readonly organizationRepository: IOrganizationRepository,
@@ -13,7 +13,7 @@ export class ApproveHqApplicationUseCase {
 
   public async execute(applicationId: string, approver: User): Promise<void> {
     if (!approver.isSuperAdmin()) {
-      throw new Error('Only superAdmin can approve HQ applications');
+      throw new Error('Only superAdmin can approve organization applications');
     }
 
     const application = await this.applicationRepository.findById(applicationId);
@@ -28,8 +28,8 @@ export class ApproveHqApplicationUseCase {
       taxNumber: application.getTaxNumber(),
       registrationNumber: application.getRegistrationNumber(),
       countryCode: application.getCountryCode(),
-      type: 'headquarter',
-      parentOrganizationId: null
+      type: application.getApplicationType(),
+      parentOrganizationId: application.getInternationalId()
     });
 
     const president = User.register({

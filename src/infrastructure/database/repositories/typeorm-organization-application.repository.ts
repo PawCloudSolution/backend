@@ -10,6 +10,8 @@ export class TypeOrmOrganizationApplicationRepository implements IOrganizationAp
     const entity = this.repository.create({
       id: application.getId(),
       status: application.getStatus(),
+      applicationType: application.getApplicationType(),
+      internationalId: application.getInternationalId(),
       documents: application.getDocuments(),
       organizationName: application.getOrganizationName(),
       countryCode: application.getCountryCode(),
