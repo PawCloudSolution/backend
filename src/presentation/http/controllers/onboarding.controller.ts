@@ -3,17 +3,24 @@ import { SubmitHqApplicationUseCase } from '../../../application/onboarding/use-
 import { ApproveHqApplicationUseCase } from '../../../application/onboarding/use-cases/approve-hq-application.use-case';
 import { IUserRepository } from '../../../application/auth/ports/user.repository.interface';
 import { USER_REPOSITORY_TOKEN } from '../modules/database.module';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { SubmitHqApplicationDto, ApproveHqApplicationDto } from '../dtos/onboarding.dto';
 
+@ApiTags('Onboarding')
+@ApiBearerAuth()
 @Controller('api/v1/onboarding')
 export class OnboardingController {
   constructor(
-    private readonly submitHqApplicationUseCase: SubmitHqApplicationUseCase,
-    private readonly approveHqApplicationUseCase: ApproveHqApplicationUseCase,
+    @Inject(SubmitHqApplicationUseCase) private readonly submitHqApplicationUseCase: SubmitHqApplicationUseCase,
+    @Inject(ApproveHqApplicationUseCase) private readonly approveHqApplicationUseCase: ApproveHqApplicationUseCase,
     @Inject(USER_REPOSITORY_TOKEN) private readonly userRepository: IUserRepository
   ) {}
 
   @Post('hq/submit')
-  public async submitHq(@Body() body: any) {
+  @ApiOperation({ summary: 'Submit an application for a new Headquarter' })
+  @ApiResponse({ status: 201, description: 'Application submitted successfully' })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  public async submitHq(@Body() body: SubmitHqApplicationDto) {
     try {
       const app = await this.submitHqApplicationUseCase.execute(body);
       return { message: 'Application submitted', id: app.getId() };
@@ -23,7 +30,11 @@ export class OnboardingController {
   }
 
   @Post('hq/approve')
-  public async approveHq(@Body() body: any) {
+  @ApiOperation({ summary: 'Approve a submitted HQ application (SuperAdmin only)' })
+  @ApiResponse({ status: 200, description: 'Application approved successfully' })
+  @ApiResponse({ status: 404, description: 'Approver not found' })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  public async approveHq(@Body() body: ApproveHqApplicationDto) {
     try {
       const { applicationId, approverId } = body;
       const approver = await this.userRepository.findById(approverId);

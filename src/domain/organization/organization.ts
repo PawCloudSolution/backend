@@ -42,6 +42,24 @@ export class Organization {
     });
   }
 
+  public static restore(raw: any): Organization {
+    const country = CountryCodeValueObject.create(raw.countryCode);
+    const type = OrganizationTypeValueObject.create(raw.type);
+    const taxNumber = raw.taxNumber ? TaxNumberValueObject.create(raw.taxNumber, country) : null;
+    const registrationNumber = raw.registrationNumber ? RegistrationNumberValueObject.create(raw.registrationNumber, country) : null;
+    const parentOrganizationId = raw.parentOrganizationId ? OrganizationIdValueObject.create(raw.parentOrganizationId) : null;
+
+    return new Organization({
+      id: OrganizationIdValueObject.create(raw.id),
+      parentOrganizationId,
+      name: OrganizationNameValueObject.create(raw.name),
+      type,
+      country,
+      taxNumber,
+      registrationNumber
+    });
+  }
+
   public getId(): string {
     return this.props.id.toString();
   }

@@ -33,6 +33,20 @@ export class Breed {
     });
   }
 
+  public static restore(raw: import('./types/breed-restore-raw-data.type').BreedRestoreRawData): Breed {
+    const nameVOs: { [languageCode: string]: BreedNameValueObject } = {};
+    for (const lang in raw.names) {
+      nameVOs[lang] = BreedNameValueObject.create(raw.names[lang]);
+    }
+
+    return new Breed({
+      id: BreedIdValueObject.create(raw.id),
+      names: nameVOs,
+      createdAt: raw.createdAt,
+      updatedAt: raw.updatedAt,
+    });
+  }
+
   public update(updates: { [languageCode: string]: string }) {
     for (const lang in updates) {
       this.names[lang] = BreedNameValueObject.create(updates[lang]);

@@ -1,6 +1,7 @@
 import { Breed } from '../../breed/breed';
 
-export interface DogCreationRawData {
+export interface DogRestoreRawData {
+  id: string;
   ownerId: string;
   breederId: string;
   organizationId: string;
@@ -8,4 +9,4 @@ export interface DogCreationRawData {
   sex: string;
   dateBirth: string;
   breed: Breed;
-};
+}

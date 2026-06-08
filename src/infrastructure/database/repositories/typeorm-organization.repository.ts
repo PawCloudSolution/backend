@@ -22,6 +22,11 @@ export class TypeOrmOrganizationRepository implements IOrganizationRepository {
   async findById(id: string): Promise<Organization | null> {
     const raw = await this.repository.findOneBy({ id });
     if (!raw) return null;
-    throw new Error('Organization.restore() not implemented in Domain yet');
+    return Organization.restore(raw);
+  }
+
+  async findAll(): Promise<Organization[]> {
+    const rawList = await this.repository.find();
+    return rawList.map(raw => Organization.restore(raw));
   }
 }

@@ -40,4 +40,9 @@ export class TypeOrmUserRepository implements IUserRepository {
     if (!raw) return null;
     return User.restore(raw);
   }
+
+  async findByOrganizationIdAndStatus(organizationId: string, status: string): Promise<User[]> {
+    const rawList = await this.repository.findBy({ organizationId, status });
+    return rawList.map(raw => User.restore(raw));
+  }
 }
