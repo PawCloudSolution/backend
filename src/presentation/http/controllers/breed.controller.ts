@@ -33,7 +33,7 @@ export class BreedController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create a breed directly (SuperAdmin or HQ President only)' })
+  @ApiOperation({ summary: 'Create a breed directly (SuperAdmin or International President only)' })
   @ApiBody({ type: CreateBreedDtoHttp })
   @ApiResponse({ status: 201, description: 'Breed created successfully' })
   public async createBreed(@Body() body: CreateBreedDtoHttp) {
@@ -59,7 +59,7 @@ export class BreedController {
   }
 
   @Post('applications/:id/approve')
-  @ApiOperation({ summary: 'Approve a breed application (SuperAdmin or HQ President only)' })
+  @ApiOperation({ summary: 'Approve a breed application (SuperAdmin or International President only)' })
   @ApiBody({ type: ApproveBreedApplicationDtoHttp })
   @ApiResponse({ status: 200, description: 'Application approved successfully' })
   public async approveApplication(@Param('id') id: string, @Body() body: ApproveBreedApplicationDtoHttp) {

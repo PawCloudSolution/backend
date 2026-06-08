@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
-import { OnboardingController } from '../controllers/onboarding.controller';
-import { SubmitHqApplicationUseCase } from '../../../application/onboarding/use-cases/submit-hq-application.use-case';
-import { ApproveHqApplicationUseCase } from '../../../application/onboarding/use-cases/approve-hq-application.use-case';
+import { InternationalController } from '../controllers/international.controller';
+import { HqController } from '../controllers/hq.controller';
+import { GetOrganizationsUseCase } from '../../../application/organization/use-cases/get-organizations.use-case';
+import { SubmitOrganizationApplicationUseCase } from '../../../application/onboarding/use-cases/submit-hq-application.use-case';
+import { ApproveOrganizationApplicationUseCase } from '../../../application/onboarding/use-cases/approve-hq-application.use-case';
 import { BcryptPasswordHasher } from '../../../infrastructure/auth/bcrypt-password-hasher';
 import {
   DatabaseModule,
@@ -15,20 +17,25 @@ import { IUserRepository } from '../../../application/auth/ports/user.repository
 
 @Module({
   imports: [DatabaseModule],
-  controllers: [OnboardingController],
+  controllers: [InternationalController, HqController],
   providers: [
+    {
+      provide: GetOrganizationsUseCase,
+      useFactory: (orgRepo: IOrganizationRepository) => new GetOrganizationsUseCase(orgRepo),
+      inject: [ORGANIZATION_REPOSITORY_TOKEN],
+    },
     {
       provide: 'PASSWORD_HASHER',
       useFactory: () => new BcryptPasswordHasher(),
     },
     {
-      provide: SubmitHqApplicationUseCase,
-      useFactory: (appRepo: IOrganizationApplicationRepository, hasher: BcryptPasswordHasher) => new SubmitHqApplicationUseCase(appRepo, hasher),
+      provide: SubmitOrganizationApplicationUseCase,
+      useFactory: (appRepo: IOrganizationApplicationRepository, hasher: BcryptPasswordHasher) => new SubmitOrganizationApplicationUseCase(appRepo, hasher),
       inject: [ORGANIZATION_APPLICATION_REPOSITORY_TOKEN, 'PASSWORD_HASHER'],
     },
     {
-      provide: ApproveHqApplicationUseCase,
-      useFactory: (appRepo: IOrganizationApplicationRepository, orgRepo: IOrganizationRepository, userRepo: IUserRepository) => new ApproveHqApplicationUseCase(appRepo, orgRepo, userRepo),
+      provide: ApproveOrganizationApplicationUseCase,
+      useFactory: (appRepo: IOrganizationApplicationRepository, orgRepo: IOrganizationRepository, userRepo: IUserRepository) => new ApproveOrganizationApplicationUseCase(appRepo, orgRepo, userRepo),
       inject: [ORGANIZATION_APPLICATION_REPOSITORY_TOKEN, ORGANIZATION_REPOSITORY_TOKEN, USER_REPOSITORY_TOKEN],
     },
   ],

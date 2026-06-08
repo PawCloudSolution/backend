@@ -20,11 +20,11 @@ export class Organization {
     
     let parentOrganizationId: OrganizationIdValueObject | null = null;
     if (raw.parentOrganizationId) {
-      if (type.isHeadquarter()) {
-        throw new Error('A headquarter cannot have a parent organization');
+      if (type.isInternational()) {
+        throw new Error('An international organization cannot have a parent organization');
       }
       parentOrganizationId = OrganizationIdValueObject.create(raw.parentOrganizationId);
-    } else if (!type.isHeadquarter()) {
+    } else if (!type.isInternational()) {
       throw new Error(`An organization of type ${raw.type} must have a parent organization`);
     }
 

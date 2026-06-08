@@ -8,6 +8,12 @@ export class OrganizationApplicationEntity {
   @Column('varchar')
   status: string;
 
+  @Column({ name: 'application_type', type: 'varchar' })
+  applicationType: string;
+
+  @Column({ name: 'international_id', type: 'uuid', nullable: true })
+  internationalId: string | null;
+
   @Column('text', { array: true })
   documents: string[];
 

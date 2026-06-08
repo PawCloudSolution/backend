@@ -9,4 +9,6 @@ export type OrganizationApplicationCreationRawData = {
   presidentEmail: string;
   presidentPhone: string;
   presidentPasswordHash: string;
+  applicationType: 'international' | 'headquarter';
+  internationalId?: string | null;
 };

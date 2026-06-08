@@ -5,6 +5,7 @@ import { v4 as uuidv4, validate as uuidValidate } from 'uuid';
 export interface BreedApplicationCreationRawData {
   names: { [languageCode: string]: string };
   requesterId: string;
+  internationalId: string;
 }
 
 export interface BreedApplicationRestoreRawData {
@@ -12,6 +13,7 @@ export interface BreedApplicationRestoreRawData {
   names: { [languageCode: string]: string };
   status: string;
   requesterId: string;
+  internationalId: string;
   createdAt: Date;
 }
 
@@ -20,6 +22,7 @@ export class BreedApplication {
   private readonly names: { [languageCode: string]: BreedNameValueObject };
   private status: BreedApplicationStatusValueObject;
   private readonly requesterId: string;
+  private readonly internationalId: string;
   private readonly createdAt: Date;
 
   private constructor(props: {
@@ -27,12 +30,14 @@ export class BreedApplication {
     names: { [languageCode: string]: BreedNameValueObject };
     status: BreedApplicationStatusValueObject;
     requesterId: string;
+    internationalId: string;
     createdAt: Date;
   }) {
     this.id = props.id;
     this.names = props.names;
     this.status = props.status;
     this.requesterId = props.requesterId;
+    this.internationalId = props.internationalId;
     this.createdAt = props.createdAt;
   }
 
@@ -51,6 +56,7 @@ export class BreedApplication {
       names: nameVOs,
       status: BreedApplicationStatusValueObject.create('pending'),
       requesterId: raw.requesterId,
+      internationalId: raw.internationalId,
       createdAt: new Date(),
     });
   }
@@ -66,6 +72,7 @@ export class BreedApplication {
       names: nameVOs,
       status: BreedApplicationStatusValueObject.create(raw.status),
       requesterId: raw.requesterId,
+      internationalId: raw.internationalId,
       createdAt: raw.createdAt,
     });
   }
@@ -90,6 +97,10 @@ export class BreedApplication {
 
   public getRequesterId(): string {
     return this.requesterId;
+  }
+
+  public getInternationalId(): string {
+    return this.internationalId;
   }
 
   public getStatus(): string {

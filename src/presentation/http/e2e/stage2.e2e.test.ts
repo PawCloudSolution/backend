@@ -35,8 +35,7 @@ describe('Stage 2 E2E Flow (Employees and Branches)', () => {
   });
 
   it('1. setup: create superadmin and HQ', async () => {
-    // 1.1 Register superAdmin
-    await request(app.getHttpServer()).post('/api/v1/auth/register').send({
+    const saRes = await request(app.getHttpServer()).post('/api/v1/auth/register').send({
       organizationId: null,
       name: 'Super',
       surname: 'Admin',
@@ -47,31 +46,61 @@ describe('Stage 2 E2E Flow (Employees and Branches)', () => {
       phoneNumber: '+12025550123',
       password: 'superadminpass'
     });
+    if (saRes.status !== 201) throw new Error('SA Register failed: ' + JSON.stringify(saRes.body));
 
-    // 1.2 Login superAdmin
     const resLogin = await request(app.getHttpServer()).post('/api/v1/auth/login').send({
       email: 'superadmin2@example.com',
       password: 'superadminpass'
     });
-    superAdminId = (jwt.decode(resLogin.body.accessToken) as any).userId;
+    if (resLogin.status !== 201) throw new Error('SA Login failed: ' + JSON.stringify(resLogin.body));
+    superAdminId = (jwt.decode(resLogin.body.tokens.accessToken) as any).userId;
 
-    // 1.3 Submit HQ
-    const resSubmit = await request(app.getHttpServer()).post('/api/v1/onboarding/hq/submit').send({
-      documents: ['doc.pdf'],
-      organizationName: 'Paw Club HQ',
+    // 1.25 Submit and Approve International
+    const resIntSubmit = await request(app.getHttpServer()).post('/api/v1/internationals/submit').send({
+      documents: ['http://example.com/doc1.pdf'],
+      organizationName: 'Int Org',
       countryCode: 'US',
-      taxNumber: 'TAX001',
-      registrationNumber: 'REG001',
-      presidentName: 'President',
-      presidentSurname: 'One',
-      presidentEmail: 'president1@pawclub.com',
-      presidentPhone: '+12025550199',
-      presidentPasswordPlain: 'prespass'
+      taxNumber: '12345',
+      registrationNumber: 'REG123',
+      presidentName: 'Int',
+      presidentSurname: 'President',
+      presidentEmail: 'int@example.com',
+      presidentPhone: '+12025550123',
+      presidentPasswordPlain: 'intpass'
+    });
+    if (resIntSubmit.status !== 201) throw new Error('Int submit failed: ' + JSON.stringify(resIntSubmit.body));
+    const intId = resIntSubmit.body.id;
+
+    const resIntApprove = await request(app.getHttpServer()).post('/api/v1/internationals/approve').send({
+      applicationId: intId,
+      approverId: superAdminId
     });
 
+    const resIntLogin = await request(app.getHttpServer()).post('/api/v1/auth/login').send({
+      email: 'int@example.com',
+      password: 'intpass'
+    });
+    const intOrgId = resIntLogin.body.user.organizationId;
+
+    // 1.3 Submit application for HQ
+    const resApp = await request(app.getHttpServer()).post(`/api/v1/internationals/${intOrgId}/hqs/submit`).send({
+      documents: ['http://example.com/doc.pdf'],
+      organizationName: 'UKU',
+      countryCode: 'UA',
+      taxNumber: '12345678',
+      registrationNumber: 'REG123',
+      presidentName: 'John',
+      presidentSurname: 'Doe',
+      presidentEmail: 'president1@pawclub.com',
+      presidentPhone: '+380501234567',
+      presidentPasswordPlain: 'prespass'
+    });
+    if (resApp.status !== 201) throw new Error('HQ submit failed: ' + JSON.stringify(resApp.body));
+    const hqAppId = resApp.body.id;
+
     // 1.4 Approve HQ
-    await request(app.getHttpServer()).post('/api/v1/onboarding/hq/approve').send({
-      applicationId: resSubmit.body.id,
+    const resApprove = await request(app.getHttpServer()).post(`/api/v1/internationals/${intOrgId}/hqs/approve`).send({
+      applicationId: hqAppId,
       approverId: superAdminId
     });
 
@@ -80,17 +109,22 @@ describe('Stage 2 E2E Flow (Employees and Branches)', () => {
       email: 'president1@pawclub.com',
       password: 'prespass'
     });
-    const decodedPres = jwt.decode(resPresLogin.body.accessToken) as any;
+    if (resPresLogin.status !== 201) throw new Error('Pres Login failed: ' + JSON.stringify(resPresLogin.body));
+    const decodedPres = jwt.decode(resPresLogin.body.tokens.accessToken) as any;
     presidentId = decodedPres.userId;
-    hqId = decodedPres.organizationId;
+    hqId = resPresLogin.body.user.organizationId;
   });
 
   it('2. should list organizations and find the HQ', async () => {
-    const res = await request(app.getHttpServer()).get('/api/v1/organizations');
+    // getIntOrgId
+    const intOrgUserRow = await AppDataSource.query(`SELECT "organizationId" FROM users WHERE email = 'int@example.com'`);
+    const intOrgId = intOrgUserRow[0].organizationId;
+    const res = await request(app.getHttpServer()).get(`/api/v1/internationals/${intOrgId}/hqs`);
     expect(res.status).toBe(200);
     expect(res.body.length).toBe(1);
-    expect(res.body[0].id).toBe(hqId);
-    expect(res.body[0].type).toBe('headquarter');
+    const hqOrg = res.body[0];
+    expect(hqOrg.id).toBe(hqId);
+    expect(hqOrg.type).toBe('headquarter');
   });
 
   it('3. should register a new employee to the HQ', async () => {
@@ -114,7 +148,7 @@ describe('Stage 2 E2E Flow (Employees and Branches)', () => {
       email: 'employee1@pawclub.com',
       password: 'emppass'
     });
-    employeeId = (jwt.decode(resLogin.body.accessToken) as any).userId;
+    employeeId = (jwt.decode(resLogin.body.tokens.accessToken) as any).userId;
   });
 
   it('4. should list pending employees', async () => {
@@ -141,10 +175,12 @@ describe('Stage 2 E2E Flow (Employees and Branches)', () => {
 
   it('6. should create a branch under the HQ', async () => {
     const res = await request(app.getHttpServer())
-      .post(`/api/v1/organizations/${hqId}/branches`)
+      .post(`/api/v1/hqs/${hqId}/clubs`)
       .send({
-        name: 'Paw Club Branch NY',
-        countryCode: 'US',
+        name: 'Kyiv Dogs Club',
+        countryCode: 'UA',
+        taxNumber: '987654321',
+        registrationNumber: 'REG987',
         requesterId: presidentId
       });
 
@@ -155,10 +191,10 @@ describe('Stage 2 E2E Flow (Employees and Branches)', () => {
     expect(res.body.id).toBeDefined();
 
     // Verify orgs list
-    const orgs = await request(app.getHttpServer()).get('/api/v1/organizations');
-    expect(orgs.body.length).toBe(2);
-    const branch = orgs.body.find((o: any) => o.type === 'club');
+    const clubs = await request(app.getHttpServer()).get(`/api/v1/hqs/${hqId}/clubs`);
+    expect(clubs.body.length).toBe(1);
+    const branch = clubs.body[0];
     expect(branch).toBeDefined();
-    expect(branch.parentOrganizationId).toBe(hqId);
+    expect(branch.hqId).toBe(hqId);
   });
 });

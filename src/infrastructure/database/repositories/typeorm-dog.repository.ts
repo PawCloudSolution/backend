@@ -49,6 +49,7 @@ export class TypeOrmDogRepository implements IDogRepository {
     const breed = Breed.restore({
       id: entity.breed.id,
       names: entity.breed.names,
+      internationalId: entity.breed.internationalId,
       createdAt: entity.breed.createdAt,
       updatedAt: entity.breed.updatedAt,
     });

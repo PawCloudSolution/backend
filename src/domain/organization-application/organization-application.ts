@@ -26,6 +26,8 @@ export class OrganizationApplication {
   private presidentEmail: EmailValueObject;
   private presidentPhone: PhoneNumberValueObject;
   private presidentPasswordHash: PasswordHashValueObject;
+  private applicationType: 'international' | 'headquarter';
+  private internationalId: string | null;
 
   private constructor(props: OrganizationApplicationProps) {
     this.id = props.id;
@@ -40,6 +42,8 @@ export class OrganizationApplication {
     this.presidentEmail = props.presidentEmail;
     this.presidentPhone = props.presidentPhone;
     this.presidentPasswordHash = props.presidentPasswordHash;
+    this.applicationType = props.applicationType;
+    this.internationalId = props.internationalId;
   }
 
   public static submit(raw: OrganizationApplicationCreationRawData): OrganizationApplication {
@@ -58,6 +62,8 @@ export class OrganizationApplication {
       presidentEmail: EmailValueObject.create(raw.presidentEmail),
       presidentPhone: PhoneNumberValueObject.create(raw.presidentPhone, countryCodeVO),
       presidentPasswordHash: PasswordHashValueObject.create(raw.presidentPasswordHash),
+      applicationType: raw.applicationType,
+      internationalId: raw.internationalId || null,
     };
 
     return new OrganizationApplication(props);
@@ -78,6 +84,8 @@ export class OrganizationApplication {
       presidentEmail: EmailValueObject.create(raw.presidentEmail),
       presidentPhone: PhoneNumberValueObject.create(raw.presidentPhone, countryCodeVO),
       presidentPasswordHash: PasswordHashValueObject.create(raw.presidentPasswordHash),
+      applicationType: raw.applicationType,
+      internationalId: raw.internationalId || null,
     };
 
     return new OrganizationApplication(props);
@@ -147,5 +155,13 @@ export class OrganizationApplication {
 
   public getStatus(): string {
     return this.status.toString();
+  }
+
+  public getApplicationType(): 'international' | 'headquarter' {
+    return this.applicationType;
+  }
+
+  public getInternationalId(): string | null {
+    return this.internationalId;
   }
 }

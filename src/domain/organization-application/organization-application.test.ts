@@ -14,12 +14,16 @@ describe('OrganizationApplication Aggregate', () => {
     presidentEmail: 'john.doe@example.com',
     presidentPhone: '+12133734253',
     presidentPasswordHash: 'hashed_password_string',
+    applicationType: 'headquarter',
+    internationalId: 'int-123'
   };
 
   it('should submit a new application successfully', () => {
     const app = OrganizationApplication.submit(validRawData);
     expect(app.isPending()).toBe(true);
     expect(app.getOrganizationName()).toBe('Super Dogs Club');
+    expect(app.getApplicationType()).toBe('headquarter');
+    expect(app.getInternationalId()).toBe('int-123');
   });
 
   it('should be able to approve a pending application', () => {

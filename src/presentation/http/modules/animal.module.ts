@@ -27,10 +27,10 @@ import { IOrganizationRepository } from '../../../application/organization/ports
     },
     {
       provide: SubmitBreedApplicationUseCase,
-      useFactory: (breedAppRepo: IBreedApplicationRepository, userRepo: IUserRepository) => {
-        return new SubmitBreedApplicationUseCase(breedAppRepo, userRepo);
+      useFactory: (breedAppRepo: IBreedApplicationRepository, userRepo: IUserRepository, orgRepo: IOrganizationRepository) => {
+        return new SubmitBreedApplicationUseCase(breedAppRepo, userRepo, orgRepo);
       },
-      inject: [BREED_APPLICATION_REPOSITORY_TOKEN, USER_REPOSITORY_TOKEN]
+      inject: [BREED_APPLICATION_REPOSITORY_TOKEN, USER_REPOSITORY_TOKEN, ORGANIZATION_REPOSITORY_TOKEN]
     },
     {
       provide: ApproveBreedApplicationUseCase,
