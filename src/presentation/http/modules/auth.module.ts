@@ -4,8 +4,9 @@ import { RegisterUserUseCase } from '../../../application/auth/use-cases/registe
 import { LoginUserUseCase } from '../../../application/auth/use-cases/login.use-case';
 import { BcryptPasswordHasher } from '../../../infrastructure/auth/bcrypt-password-hasher';
 import { JwtTokenService } from '../../../infrastructure/auth/jwt-token.service';
-import { DatabaseModule, USER_REPOSITORY_TOKEN } from './database.module';
+import { DatabaseModule, USER_REPOSITORY_TOKEN, ORGANIZATION_REPOSITORY_TOKEN } from './database.module';
 import { IUserRepository } from '../../../application/auth/ports/user.repository.interface';
+import { IOrganizationRepository } from '../../../application/organization/ports/organization.repository.interface';
 
 @Module({
   imports: [DatabaseModule],
@@ -21,8 +22,8 @@ import { IUserRepository } from '../../../application/auth/ports/user.repository
     },
     {
       provide: RegisterUserUseCase,
-      useFactory: (userRepo: IUserRepository, hasher: BcryptPasswordHasher) => new RegisterUserUseCase(userRepo, hasher),
-      inject: [USER_REPOSITORY_TOKEN, 'PASSWORD_HASHER'],
+      useFactory: (userRepo: IUserRepository, hasher: BcryptPasswordHasher, orgRepo: IOrganizationRepository) => new RegisterUserUseCase(userRepo, hasher, orgRepo),
+      inject: [USER_REPOSITORY_TOKEN, 'PASSWORD_HASHER', ORGANIZATION_REPOSITORY_TOKEN],
     },
     {
       provide: LoginUserUseCase,

@@ -1,32 +1,32 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class BreedNamesDto {
-  @ApiProperty({ example: 'Golden Retriever', description: 'English name (required)' })
+  @ApiProperty({ example: 'Golden Retriever', description: 'English name (required)', type: String })
   en: string;
 
-  @ApiProperty({ example: 'Золотистий ретривер', required: false })
+  @ApiPropertyOptional({ example: 'Золотистий ретривер', type: String, nullable: true })
   uk?: string;
 
-  [key: string]: string | undefined;
+  [languageCode: string]: string | undefined;
 }
 
 export class CreateBreedDtoHttp {
   @ApiProperty({ type: BreedNamesDto })
-  names: Record<string, string>;
+  names: { [languageCode: string]: string };
 
-  @ApiProperty({ example: 'uuid', description: 'ID of the superAdmin or HQ president' })
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'ID of the superAdmin or HQ president', type: String })
   requesterId: string;
 }
 
 export class SubmitBreedApplicationDtoHttp {
   @ApiProperty({ type: BreedNamesDto })
-  names: Record<string, string>;
+  names: { [languageCode: string]: string };
 
-  @ApiProperty({ example: 'uuid', description: 'ID of the club employee' })
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174001', description: 'ID of the club employee', type: String })
   requesterId: string;
 }
 
 export class ApproveBreedApplicationDtoHttp {
-  @ApiProperty({ example: 'uuid', description: 'ID of the superAdmin or HQ president' })
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174002', description: 'ID of the superAdmin or HQ president', type: String })
   approverId: string;
 }

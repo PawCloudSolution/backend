@@ -3,7 +3,7 @@ import { SubmitHqApplicationUseCase } from '../../../application/onboarding/use-
 import { ApproveHqApplicationUseCase } from '../../../application/onboarding/use-cases/approve-hq-application.use-case';
 import { IUserRepository } from '../../../application/auth/ports/user.repository.interface';
 import { USER_REPOSITORY_TOKEN } from '../modules/database.module';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { SubmitHqApplicationDto, ApproveHqApplicationDto } from '../dtos/onboarding.dto';
 
 @ApiTags('Onboarding')
@@ -18,6 +18,7 @@ export class OnboardingController {
 
   @Post('hq/submit')
   @ApiOperation({ summary: 'Submit an application for a new Headquarter' })
+  @ApiBody({ type: SubmitHqApplicationDto })
   @ApiResponse({ status: 201, description: 'Application submitted successfully' })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   public async submitHq(@Body() body: SubmitHqApplicationDto) {
@@ -31,6 +32,7 @@ export class OnboardingController {
 
   @Post('hq/approve')
   @ApiOperation({ summary: 'Approve a submitted HQ application (SuperAdmin only)' })
+  @ApiBody({ type: ApproveHqApplicationDto })
   @ApiResponse({ status: 200, description: 'Application approved successfully' })
   @ApiResponse({ status: 404, description: 'Approver not found' })
   @ApiResponse({ status: 400, description: 'Bad Request' })

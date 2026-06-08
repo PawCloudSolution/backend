@@ -4,7 +4,7 @@ import request from 'supertest';
 import { AppModule } from '../../../app.module';
 import { AppDataSource } from '../../../infrastructure/database/data-source';
 import { beforeAll, afterAll, describe, it, expect } from 'vitest';
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 describe('Stage 2 E2E Flow (Employees and Branches)', () => {
   let app: INestApplication;

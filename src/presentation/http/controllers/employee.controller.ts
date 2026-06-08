@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Param, Query, HttpException, HttpStatus, Inject } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { GetPendingEmployeesUseCase } from '../../../application/organization/use-cases/get-pending-employees.use-case';
 import { ApproveEmployeeUseCase } from '../../../application/organization/use-cases/approve-employee.use-case';
 import { ApproveEmployeeDtoHttp, GetPendingEmployeesDtoHttp } from '../dtos/employee.dto';
@@ -14,7 +14,9 @@ export class EmployeeController {
   ) {}
 
   @Get('pending')
-  @ApiOperation({ summary: 'List pending employees for an organization' })
+  @ApiOperation({ summary: 'List pending employees for an organization (Manager/President only)' })
+  @ApiQuery({ name: 'organizationId', required: true, description: 'ID of the organization' })
+  @ApiQuery({ name: 'requesterId', required: true, description: 'ID of the user making the request (Manager)' })
   @ApiResponse({ status: 200, description: 'List of pending employees' })
   public async getPendingEmployees(@Query() query: GetPendingEmployeesDtoHttp) {
     try {
@@ -33,7 +35,8 @@ export class EmployeeController {
 
   @Post(':id/approve')
   @ApiOperation({ summary: 'Approve a pending employee' })
-  @ApiResponse({ status: 200, description: 'Employee approved successfully' })
+  @ApiBody({ type: ApproveEmployeeDtoHttp })
+  @ApiResponse({ status: 201, description: 'Employee approved successfully' })
   public async approveEmployee(@Param('id') id: string, @Body() body: ApproveEmployeeDtoHttp) {
     try {
       await this.approveEmployeeUseCase.execute(id, body.approverId);

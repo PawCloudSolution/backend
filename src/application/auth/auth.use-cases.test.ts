@@ -7,6 +7,7 @@ describe('Auth Use Cases', () => {
   let mockUserRepository: any;
   let mockPasswordHasher: any;
   let mockTokenService: any;
+  let mockOrganizationRepository: any;
 
   beforeEach(() => {
     mockUserRepository = {
@@ -25,16 +26,21 @@ describe('Auth Use Cases', () => {
       verifyAccessToken: vi.fn(),
       verifyRefreshToken: vi.fn(),
     };
+
+    mockOrganizationRepository = {
+      findById: vi.fn(),
+    };
   });
 
   describe('RegisterUserUseCase', () => {
     it('should register a user successfully', async () => {
-      const useCase = new RegisterUserUseCase(mockUserRepository, mockPasswordHasher);
+      const useCase = new RegisterUserUseCase(mockUserRepository, mockPasswordHasher, mockOrganizationRepository);
       
       mockUserRepository.findByEmail.mockResolvedValue(null);
       mockUserRepository.findByUsername.mockResolvedValue(null);
       mockPasswordHasher.hash.mockResolvedValue('hashed_secret_password_lengthy_enough');
       mockUserRepository.save.mockResolvedValue(undefined);
+      mockOrganizationRepository.findById.mockResolvedValue({}); // Org exists
 
       const dto: RegisterUserDto = {
         organizationId: '123e4567-e89b-12d3-a456-426614174000',
@@ -57,9 +63,10 @@ describe('Auth Use Cases', () => {
     });
 
     it('should throw if email exists', async () => {
-      const useCase = new RegisterUserUseCase(mockUserRepository, mockPasswordHasher);
+      const useCase = new RegisterUserUseCase(mockUserRepository, mockPasswordHasher, mockOrganizationRepository);
       
       mockUserRepository.findByEmail.mockResolvedValue(true); // Exists
+      mockOrganizationRepository.findById.mockResolvedValue({}); // Org exists
 
       const dto: RegisterUserDto = {
         organizationId: '123e4567-e89b-12d3-a456-426614174000',
@@ -74,6 +81,26 @@ describe('Auth Use Cases', () => {
       };
 
       await expect(useCase.execute(dto)).rejects.toThrow('User with this email already exists');
+    });
+
+    it('should throw if organization does not exist', async () => {
+      const useCase = new RegisterUserUseCase(mockUserRepository, mockPasswordHasher, mockOrganizationRepository);
+      
+      mockOrganizationRepository.findById.mockResolvedValue(null); // Org not found
+
+      const dto: RegisterUserDto = {
+        organizationId: '123e4567-e89b-12d3-a456-426614174000',
+        name: 'Jane',
+        surname: 'Doe',
+        email: 'jane@example.com',
+        username: 'janedoe',
+        role: 'member',
+        countryCode: 'US',
+        phoneNumber: '+12133734253',
+        password: 'plain_password',
+      };
+
+      await expect(useCase.execute(dto)).rejects.toThrow('Organization not found (how did you bypass the frontend?)');
     });
   });
 
@@ -102,9 +129,10 @@ describe('Auth Use Cases', () => {
         password: 'plain_password',
       };
 
-      const tokens = await useCase.execute(dto);
+      const result = await useCase.execute(dto);
 
-      expect(tokens).toEqual({ accessToken: 'access', refreshToken: 'refresh' });
+      expect(result.tokens).toEqual({ accessToken: 'access', refreshToken: 'refresh' });
+      expect(result.user.id).toBe(mockUser.getId());
       expect(mockPasswordHasher.compare).toHaveBeenCalledWith('plain_password', 'hashed_secret_password_lengthy_enough');
       expect(mockTokenService.generateTokens).toHaveBeenCalledWith({
         userId: mockUser.getId(),

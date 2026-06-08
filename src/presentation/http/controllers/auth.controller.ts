@@ -1,7 +1,7 @@
 import { Controller, Post, Body, HttpException, HttpStatus, Inject } from '@nestjs/common';
 import { RegisterUserUseCase } from '../../../application/auth/use-cases/register.use-case';
 import { LoginUserUseCase } from '../../../application/auth/use-cases/login.use-case';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { RegisterUserDto, LoginUserDto } from '../dtos/auth.dto';
 
 @ApiTags('Auth')
@@ -14,12 +14,13 @@ export class AuthController {
 
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
+  @ApiBody({ type: RegisterUserDto })
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   public async register(@Body() body: RegisterUserDto) {
     try {
-      await this.registerUserUseCase.execute(body);
-      return { message: 'User registered successfully' };
+      const user = await this.registerUserUseCase.execute(body);
+      return { message: 'User registered successfully', userId: user.getId() };
     } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
@@ -27,6 +28,7 @@ export class AuthController {
 
   @Post('login')
   @ApiOperation({ summary: 'Login an existing user' })
+  @ApiBody({ type: LoginUserDto })
   @ApiResponse({ status: 200, description: 'Successfully logged in, returns tokens' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   public async login(@Body() body: LoginUserDto) {

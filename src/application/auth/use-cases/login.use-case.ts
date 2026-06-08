@@ -14,7 +14,7 @@ export class LoginUserUseCase {
     private readonly tokenService: ITokenService
   ) {}
 
-  public async execute(dto: LoginUserDto): Promise<TokenPair> {
+  public async execute(dto: LoginUserDto): Promise<{ tokens: TokenPair, user: { id: string, email: string, role: string, organizationId: string | null } }> {
     const user = await this.userRepository.findByEmail(dto.email);
     if (!user) {
       throw new Error('Invalid email or password');
@@ -25,9 +25,19 @@ export class LoginUserUseCase {
       throw new Error('Invalid email or password');
     }
 
-    return this.tokenService.generateTokens({
+    const tokens = this.tokenService.generateTokens({
       userId: user.getId(),
       organizationId: user.getOrganizationId()
     });
+
+    return {
+      tokens,
+      user: {
+        id: user.getId(),
+        email: user.getEmail(),
+        role: user.getRole(),
+        organizationId: user.getOrganizationId()
+      }
+    };
   }
 }

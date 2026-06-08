@@ -1,4 +1,4 @@
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { ITokenService, TokenPair, TokenPayload } from '../../application/auth/ports/token.service.interface';
 
 export class JwtTokenService implements ITokenService {

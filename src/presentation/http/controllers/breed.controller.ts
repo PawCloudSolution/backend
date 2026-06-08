@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Param, HttpException, HttpStatus, Inject } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { CreateBreedUseCase } from '../../../application/breed/use-cases/create-breed.use-case';
 import { SubmitBreedApplicationUseCase } from '../../../application/breed/use-cases/submit-breed-application.use-case';
 import { ApproveBreedApplicationUseCase } from '../../../application/breed/use-cases/approve-breed-application.use-case';
@@ -34,6 +34,7 @@ export class BreedController {
 
   @Post()
   @ApiOperation({ summary: 'Create a breed directly (SuperAdmin or HQ President only)' })
+  @ApiBody({ type: CreateBreedDtoHttp })
   @ApiResponse({ status: 201, description: 'Breed created successfully' })
   public async createBreed(@Body() body: CreateBreedDtoHttp) {
     try {
@@ -46,6 +47,7 @@ export class BreedController {
 
   @Post('applications')
   @ApiOperation({ summary: 'Submit a new breed application (Club Employee only)' })
+  @ApiBody({ type: SubmitBreedApplicationDtoHttp })
   @ApiResponse({ status: 201, description: 'Application submitted successfully' })
   public async submitApplication(@Body() body: SubmitBreedApplicationDtoHttp) {
     try {
@@ -58,6 +60,7 @@ export class BreedController {
 
   @Post('applications/:id/approve')
   @ApiOperation({ summary: 'Approve a breed application (SuperAdmin or HQ President only)' })
+  @ApiBody({ type: ApproveBreedApplicationDtoHttp })
   @ApiResponse({ status: 200, description: 'Application approved successfully' })
   public async approveApplication(@Param('id') id: string, @Body() body: ApproveBreedApplicationDtoHttp) {
     try {

@@ -1,6 +1,7 @@
 import { User } from '../../../domain/user/user';
 import { IPasswordHasher } from '../ports/password-hasher.interface';
 import { IUserRepository } from '../ports/user.repository.interface';
+import { IOrganizationRepository } from '../../organization/ports/organization.repository.interface';
 
 export interface RegisterUserDto {
   organizationId: string | null;
@@ -17,10 +18,18 @@ export interface RegisterUserDto {
 export class RegisterUserUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
-    private readonly passwordHasher: IPasswordHasher
+    private readonly passwordHasher: IPasswordHasher,
+    private readonly organizationRepository: IOrganizationRepository
   ) {}
 
   public async execute(dto: RegisterUserDto): Promise<User> {
+    if (dto.organizationId) {
+      const org = await this.organizationRepository.findById(dto.organizationId);
+      if (!org) {
+        throw new Error('Organization not found (how did you bypass the frontend?)');
+      }
+    }
+
     const existingUserByEmail = await this.userRepository.findByEmail(dto.email);
     if (existingUserByEmail) {
       throw new Error('User with this email already exists');

@@ -4,7 +4,7 @@ import request from 'supertest';
 import { AppModule } from '../../../app.module';
 import { AppDataSource } from '../../../infrastructure/database/data-source';
 import { beforeAll, afterAll, describe, it, expect } from 'vitest';
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 describe('End-to-End User Flow', () => {
   let app: INestApplication;
@@ -64,11 +64,10 @@ describe('End-to-End User Flow', () => {
       });
 
     expect(res.status).toBe(201); // NestJS POST default is 201
-    expect(res.body.accessToken).toBeDefined();
+    expect(res.body.tokens.accessToken).toBeDefined();
+    expect(res.body.user.id).toBeDefined();
 
-    const decoded = jwt.decode(res.body.accessToken) as any;
-    superAdminId = decoded.userId;
-    expect(superAdminId).toBeDefined();
+    superAdminId = res.body.user.id;
   });
 
   it('3. should submit an application for a new Headquarter', async () => {

@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Query, HttpException, HttpStatus, Inject } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { RegisterDogUseCase } from '../../../application/dog/use-cases/register-dog.use-case';
 import { GetDogsUseCase } from '../../../application/dog/use-cases/get-dogs.use-case';
 import { RegisterDogDtoHttp } from '../dtos/dog.dto';
@@ -15,6 +15,7 @@ export class DogController {
 
   @Post()
   @ApiOperation({ summary: 'Register a dog (Club Employee only)' })
+  @ApiBody({ type: RegisterDogDtoHttp })
   @ApiResponse({ status: 201, description: 'Dog registered successfully' })
   public async registerDog(@Body() body: RegisterDogDtoHttp) {
     try {
