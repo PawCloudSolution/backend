@@ -8,10 +8,12 @@ import { PhoneNumberValueObject } from '../value-objects/phone-number.value-obje
 import { PasswordHashValueObject } from '../value-objects/password-hash.value-object';
 import { CountryCodeValueObject } from '../../shared/value-objects/country-code.value-object';
 import { OrganizationIdValueObject } from '../../organization/value-objects/organization-id.value-object';
+import { UserStatusValueObject } from '../value-objects/user-status.value-object';
 
 export type UserProps = {
   id: UserIdValueObject;
-  organizationId: OrganizationIdValueObject;
+  organizationId: OrganizationIdValueObject | null;
+  status: UserStatusValueObject;
   name: NameValueObject;
   surname: SurnameValueObject;
   email: EmailValueObject;
