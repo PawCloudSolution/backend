@@ -122,6 +122,10 @@ export class User {
     return this.username.toString();
   }
 
+  public getCountryCode(): string {
+    return this.countryCode.toString();
+  }
+
   public getPhoneNumber(): string | null {
     return this.phoneNumber.toString();
   }

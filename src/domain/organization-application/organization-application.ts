@@ -63,6 +63,26 @@ export class OrganizationApplication {
     return new OrganizationApplication(props);
   }
 
+  public static restore(raw: any): OrganizationApplication {
+    const countryCodeVO = CountryCodeValueObject.create(raw.countryCode);
+    const props: OrganizationApplicationProps = {
+      id: OrganizationApplicationIdValueObject.create(raw.id),
+      status: ApplicationStatusValueObject.create(raw.status),
+      documents: DocumentLinksValueObject.create(raw.documents),
+      organizationName: OrganizationNameValueObject.create(raw.organizationName),
+      countryCode: countryCodeVO,
+      taxNumber: TaxNumberValueObject.create(raw.taxNumber, countryCodeVO),
+      registrationNumber: RegistrationNumberValueObject.create(raw.registrationNumber, countryCodeVO),
+      presidentName: NameValueObject.create(raw.presidentName),
+      presidentSurname: SurnameValueObject.create(raw.presidentSurname),
+      presidentEmail: EmailValueObject.create(raw.presidentEmail),
+      presidentPhone: PhoneNumberValueObject.create(raw.presidentPhone, countryCodeVO),
+      presidentPasswordHash: PasswordHashValueObject.create(raw.presidentPasswordHash),
+    };
+
+    return new OrganizationApplication(props);
+  }
+
   public approve(): void {
     if (!this.status.isPending()) {
       throw new Error('Can only approve pending applications');
@@ -119,5 +139,13 @@ export class OrganizationApplication {
 
   public getPresidentPasswordHash(): string {
     return this.presidentPasswordHash.toString();
+  }
+
+  public getDocuments(): string[] {
+    return this.documents.getLinks();
+  }
+
+  public getStatus(): string {
+    return this.status.toString();
   }
 }
