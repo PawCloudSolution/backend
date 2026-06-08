@@ -1,15 +1,17 @@
+export type UserRoleEnum = 'member' | 'employee' | 'roleManager' | 'superAdmin';
+
 export class UserRoleValueObject {
   private constructor(
-    private readonly value: 'member' | 'employee' | 'roleManager',
+    private readonly value: UserRoleEnum,
   ) {}
 
   public static create(value: string) {
-    if (!['member', 'employee', 'roleManager'].includes(value)) {
+    if (!['member', 'employee', 'roleManager', 'superAdmin'].includes(value)) {
       throw new Error('Invalid user role');
     }
 
     return new UserRoleValueObject(
-      value as 'member' | 'employee' | 'roleManager',
+      value as UserRoleEnum,
     );
   }
 
@@ -31,5 +33,9 @@ export class UserRoleValueObject {
 
   public isRoleManager() {
     return this.value === 'roleManager';
+  }
+
+  public isSuperAdmin() {
+    return this.value === 'superAdmin';
   }
 }

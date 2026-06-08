@@ -11,10 +11,12 @@ import { PasswordHashValueObject } from './value-objects/password-hash.value-obj
 import { PhoneNumberValueObject } from './value-objects/phone-number.value-object';
 import { CountryCodeValueObject } from '../shared/value-objects/country-code.value-object';
 import { OrganizationIdValueObject } from '../organization/value-objects/organization-id.value-object';
+import { UserStatusValueObject } from './value-objects/user-status.value-object';
 
 export class User {
   private id: UserIdValueObject;
-  private organizationId: OrganizationIdValueObject;
+  private organizationId: OrganizationIdValueObject | null;
+  private status: UserStatusValueObject;
   private name: NameValueObject;
   private surname: SurnameValueObject;
   private email: EmailValueObject;
@@ -27,6 +29,7 @@ export class User {
   private constructor(props: UserProps) {
     this.id = props.id;
     this.organizationId = props.organizationId;
+    this.status = props.status;
     this.name = props.name;
     this.surname = props.surname;
     this.email = props.email;
@@ -39,15 +42,24 @@ export class User {
 
   public static register(raw: UserCreationRawData): User {
     const countryCodeVO = CountryCodeValueObject.create(raw.countryCode);
+    const roleVO = UserRoleValueObject.create(raw.role);
+
+    let orgId: OrganizationIdValueObject | null = null;
+    if (raw.organizationId) {
+      orgId = OrganizationIdValueObject.create(raw.organizationId);
+    } else if (!roleVO.isSuperAdmin()) {
+      throw new Error('Organization ID is required for non-superAdmin users');
+    }
 
     const props: UserProps = {
       id: UserIdValueObject.generate(),
-      organizationId: OrganizationIdValueObject.create(raw.organizationId),
+      organizationId: orgId,
+      status: UserStatusValueObject.create(raw.status || 'active'),
       name: NameValueObject.create(raw.name),
       surname: SurnameValueObject.create(raw.surname),
       email: EmailValueObject.create(raw.email),
       username: UsernameValueObject.create(raw.username),
-      role: UserRoleValueObject.create(raw.role),
+      role: roleVO,
       countryCode: countryCodeVO,
       phoneNumber: PhoneNumberValueObject.create(raw.phoneNumber, countryCodeVO),
       hashedPassword: PasswordHashValueObject.create(raw.hashedPassword),
@@ -58,15 +70,22 @@ export class User {
 
   public static restore(raw: UserRestoreRawData): User {
     const countryCodeVO = CountryCodeValueObject.create(raw.countryCode);
+    const roleVO = UserRoleValueObject.create(raw.role);
+
+    let orgId: OrganizationIdValueObject | null = null;
+    if (raw.organizationId) {
+      orgId = OrganizationIdValueObject.create(raw.organizationId);
+    }
 
     const props: UserProps = {
       id: UserIdValueObject.create(raw.id),
-      organizationId: OrganizationIdValueObject.create(raw.organizationId),
+      organizationId: orgId,
+      status: UserStatusValueObject.create(raw.status),
       name: NameValueObject.create(raw.name),
       surname: SurnameValueObject.create(raw.surname),
       email: EmailValueObject.create(raw.email),
       username: UsernameValueObject.create(raw.username),
-      role: UserRoleValueObject.create(raw.role),
+      role: roleVO,
       countryCode: countryCodeVO,
       phoneNumber: PhoneNumberValueObject.create(raw.phoneNumber, countryCodeVO),
       hashedPassword: PasswordHashValueObject.create(raw.hashedPassword),
@@ -79,8 +98,12 @@ export class User {
     return this.id.toString();
   }
 
-  public getOrganizationId(): string {
-    return this.organizationId.toString();
+  public getOrganizationId(): string | null {
+    return this.organizationId ? this.organizationId.toString() : null;
+  }
+
+  public getStatus(): string {
+    return this.status.toString();
   }
 
   public getName(): string {
@@ -99,6 +122,10 @@ export class User {
     return this.username.toString();
   }
 
+  public getCountryCode(): string {
+    return this.countryCode.toString();
+  }
+
   public getPhoneNumber(): string | null {
     return this.phoneNumber.toString();
   }
@@ -115,6 +142,10 @@ export class User {
     return this.role.isRoleManager();
   }
 
+  public isSuperAdmin(): boolean {
+    return this.role.isSuperAdmin();
+  }
+
   public isEmployee(): boolean {
     return this.role.isEmployee();
   }
@@ -124,8 +155,8 @@ export class User {
   }
 
   public changeRoleBy(actor: User, newRole: UserRoleValueObject): void {
-    if (!actor.isRoleManager()) {
-      throw new Error('Only a roleManager can change roles');
+    if (!actor.isRoleManager() && !actor.isSuperAdmin()) {
+      throw new Error('Only a roleManager or superAdmin can change roles');
     }
 
     if (this.equals(actor)) {
@@ -137,6 +168,24 @@ export class User {
     }
 
     this.role = newRole;
+  }
+
+  public approve(actor: User): void {
+    if (!actor.isRoleManager() && !actor.isSuperAdmin()) {
+      throw new Error('Only a roleManager or superAdmin can approve users');
+    }
+    
+    // Additional logic: a roleManager should only approve users in their own org
+    // but for simplicity we assume the Application Layer checks permissions.
+
+    this.status = UserStatusValueObject.create('active');
+  }
+
+  public suspend(actor: User): void {
+    if (!actor.isRoleManager() && !actor.isSuperAdmin()) {
+      throw new Error('Only a roleManager or superAdmin can suspend users');
+    }
+    this.status = UserStatusValueObject.create('suspended');
   }
 
   public updateName(newName: string): void {

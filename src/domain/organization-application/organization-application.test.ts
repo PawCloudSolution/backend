@@ -1,0 +1,42 @@
+import { describe, it, expect } from 'vitest';
+import { OrganizationApplication } from './organization-application';
+import { OrganizationApplicationCreationRawData } from './types/organization-application-creation-raw-data.type';
+
+describe('OrganizationApplication Aggregate', () => {
+  const validRawData: OrganizationApplicationCreationRawData = {
+    documents: ['https://s3.aws.com/doc1.pdf'],
+    organizationName: 'Super Dogs Club',
+    countryCode: 'US',
+    taxNumber: '123456789',
+    registrationNumber: 'REG-123',
+    presidentName: 'John',
+    presidentSurname: 'Doe',
+    presidentEmail: 'john.doe@example.com',
+    presidentPhone: '+12133734253',
+    presidentPasswordHash: 'hashed_password_string',
+  };
+
+  it('should submit a new application successfully', () => {
+    const app = OrganizationApplication.submit(validRawData);
+    expect(app.isPending()).toBe(true);
+    expect(app.getOrganizationName()).toBe('Super Dogs Club');
+  });
+
+  it('should be able to approve a pending application', () => {
+    const app = OrganizationApplication.submit(validRawData);
+    app.approve();
+    expect(app.isPending()).toBe(false);
+  });
+
+  it('should throw if trying to approve an already approved application', () => {
+    const app = OrganizationApplication.submit(validRawData);
+    app.approve();
+    expect(() => app.approve()).toThrow('Can only approve pending applications');
+  });
+
+  it('should be able to reject a pending application', () => {
+    const app = OrganizationApplication.submit(validRawData);
+    app.reject();
+    expect(app.isPending()).toBe(false);
+  });
+});

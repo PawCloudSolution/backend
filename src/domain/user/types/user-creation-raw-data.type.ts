@@ -7,5 +7,6 @@ export type UserCreationRawData = {
   username: string;
   hashedPassword: string;
   role: string;
-  organizationId: string;
+  organizationId?: string | null;
+  status?: string;
 };

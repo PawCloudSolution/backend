@@ -1,6 +1,7 @@
 export type UserRestoreRawData = {
   id: string;
-  organizationId: string;
+  organizationId: string | null;
+  status: string;
   name: string;
   surname: string;
   email: string;

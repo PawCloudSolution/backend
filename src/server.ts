@@ -1,11 +1,18 @@
-import express from "express";
+import 'reflect-metadata';
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { AppDataSource } from './infrastructure/database/data-source';
 
-const app = express();
-app.use(express.json());
+async function bootstrap() {
+  await AppDataSource.initialize();
+  console.log('Data Source has been initialized!');
 
-app.get("/", (req, res) => {
-    res.send("OJEJU ONO DZIAŁA YEPIIIIIII!");
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+  const app = await NestFactory.create(AppModule);
+  app.enableCors();
+  
+  const PORT = process.env.PORT || 3000;
+  await app.listen(PORT, () => {
+    console.log(`Server started on port ${PORT}`);
+  });
+}
+bootstrap();

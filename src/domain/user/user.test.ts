@@ -44,7 +44,7 @@ describe('User Aggregate', () => {
   it('should not allow a non-manager to change roles', () => {
     const member = User.register(validRawData);
     const user = User.register({ ...validRawData, username: 'user123' });
-    expect(() => user.changeRoleBy(member, UserRoleValueObject.create('roleManager'))).toThrow('Only a roleManager can change roles');
+    expect(() => user.changeRoleBy(member, UserRoleValueObject.create('roleManager'))).toThrow('Only a roleManager or superAdmin can change roles');
   });
 
   it('should throw an error if assigning the same role', () => {
