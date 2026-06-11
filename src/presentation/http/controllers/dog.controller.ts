@@ -1,5 +1,9 @@
-import { Controller, Get, Post, Body, Query, HttpException, HttpStatus, Inject } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, HttpException, HttpStatus, Inject, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiBody } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { RolesGuard } from '../guards/roles.guard';
+import { Roles } from '../decorators/roles.decorator';
+import { CurrentUser } from '../decorators/current-user.decorator';
 import { RegisterDogUseCase } from '../../../application/dog/use-cases/register-dog.use-case';
 import { GetDogsUseCase } from '../../../application/dog/use-cases/get-dogs.use-case';
 import { RegisterDogDtoHttp } from '../dtos/dog.dto';
@@ -14,13 +18,19 @@ export class DogController {
   ) {}
 
   @Post()
-  @ApiOperation({ summary: 'Register a dog (Club Employee only)' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('employee', 'internationalPresident', 'nationalPresident', 'branchPresident', 'superAdmin')
+  @ApiOperation({ summary: 'Register a new dog (creates a pending registration)' })
   @ApiBody({ type: RegisterDogDtoHttp })
   @ApiResponse({ status: 201, description: 'Dog registered successfully' })
-  public async registerDog(@Body() body: RegisterDogDtoHttp) {
+  public async registerDog(@CurrentUser() user: any, @Body() body: RegisterDogDtoHttp) {
     try {
-      const dog = await this.registerDogUseCase.execute(body);
-      return { message: 'Dog registered successfully', id: dog.getId() };
+      const payload = {
+        ...body,
+        requesterId: user.id
+      };
+      const dog = await this.registerDogUseCase.execute(payload);
+      return { message: 'Dog registered successfully', id: dog.getId().toString() };
     } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }

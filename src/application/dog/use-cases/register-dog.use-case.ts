@@ -26,8 +26,8 @@ export class RegisterDogUseCase {
       throw new Error('Requester not found');
     }
 
-    if (!requester.isEmployee() && !requester.isRoleManager() && !requester.isSuperAdmin()) {
-      throw new Error('Only employees or managers can register dogs in the system');
+    if (!requester.isEmployee() && !requester.isAnyPresident() && !requester.isSuperAdmin()) {
+      throw new Error('Only employees, presidents, or super admins can register a dog');
     }
 
     const breed = await this.breedRepository.findById(dto.breedId);

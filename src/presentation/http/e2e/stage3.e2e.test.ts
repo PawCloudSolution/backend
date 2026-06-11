@@ -15,12 +15,17 @@ describe('Stage 3 Flow (E2E) - Dogs and Breeds', () => {
   let ownerId: string;
   let breederId: string;
 
+  let superAdminCookies: any;
+  let hqPresidentCookies: any;
+  let clubPresidentCookies: any;
+
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.use(require('cookie-parser')());
     await app.init();
 
     await AppDataSource.initialize();
@@ -40,12 +45,18 @@ describe('Stage 3 Flow (E2E) - Dogs and Breeds', () => {
     });
     if (saRes.status !== 201) throw new Error('SA register failed: ' + JSON.stringify(saRes.body));
     
-    // We have to extract superAdmin ID from DB since register doesn't return it
-    const saRow = await AppDataSource.query(`SELECT id FROM users WHERE email = 'sa3@example.com'`);
-    superAdminId = saRow[0].id;
+    const saLogin = await request(app.getHttpServer()).post('/api/v1/auth/login').send({
+      email: 'sa3@example.com',
+      password: 'password123'
+    });
+    superAdminId = saLogin.body.user.id;
+    superAdminCookies = saLogin.headers['set-cookie'];
 
     // 2. Setup: Create International Application -> Approve it
-    const intAppRes = await request(app.getHttpServer()).post('/api/v1/internationals/submit').send({
+    const intAppRes = await request(app.getHttpServer())
+      .post('/api/v1/internationals/submit')
+      .set('Cookie', superAdminCookies)
+      .send({
       documents: ['http://example.com/doc.pdf'],
       organizationName: 'Int Org',
       countryCode: 'US',
@@ -59,68 +70,83 @@ describe('Stage 3 Flow (E2E) - Dogs and Breeds', () => {
     });
     if (intAppRes.status !== 201) throw new Error('Int submit failed: ' + JSON.stringify(intAppRes.body));
     
-    await request(app.getHttpServer()).post('/api/v1/internationals/approve').send({
-      applicationId: intAppRes.body.id,
-      approverId: superAdminId
-    });
+    await request(app.getHttpServer()).post('/api/v1/internationals/approve')
+      .set('Cookie', superAdminCookies)
+      .send({
+        applicationId: intAppRes.body.id
+      });
 
-    const intUserRow = await AppDataSource.query(`SELECT "organizationId" FROM users WHERE email = 'intp3@example.com'`);
-    const intOrgId = intUserRow[0].organizationId;
+    const intLogin = await request(app.getHttpServer()).post('/api/v1/auth/login').send({
+      email: 'intp3@example.com',
+      password: 'password123'
+    });
+    const intOrgId = intLogin.body.user.organizationId;
 
     // 2.5 Setup: Create HQ Application -> Approve it -> Get Club President ID & Org ID
-    const hqAppRes = await request(app.getHttpServer()).post(`/api/v1/internationals/${intOrgId}/hqs/submit`).send({
-      documents: ['http://example.com/doc.pdf'],
-      organizationName: 'HQ Org',
-      countryCode: 'US',
-      taxNumber: '1234',
-      registrationNumber: 'REG1234',
-      presidentName: 'HQ',
-      presidentSurname: 'President',
-      presidentEmail: 'hqp3@example.com',
-      presidentPhone: '+12025550199',
-      presidentPasswordPlain: 'password123'
-    });
+    const intPresidentCookies = intLogin.headers['set-cookie'];
+    const hqAppRes = await request(app.getHttpServer())
+      .post(`/api/v1/internationals/${intOrgId}/hqs/submit`)
+      .set('Cookie', intPresidentCookies)
+      .send({
+        documents: ['http://example.com/doc.pdf'],
+        organizationName: 'Central HQ',
+        countryCode: 'US',
+        taxNumber: '1234',
+        registrationNumber: 'REG1234',
+        presidentName: 'HQ',
+        presidentSurname: 'President',
+        presidentEmail: 'hqp3@example.com',
+        presidentPhone: '+12025550199',
+        presidentPasswordPlain: 'password123'
+      });
     if (hqAppRes.status !== 201) throw new Error('HQ submit failed: ' + JSON.stringify(hqAppRes.body));
     const hqAppId = hqAppRes.body.id;
 
-    const hqApproveRes = await request(app.getHttpServer()).post(`/api/v1/internationals/${intOrgId}/hqs/approve`).send({
-      applicationId: hqAppId,
-      approverId: superAdminId
-    });
+    const hqApproveRes = await request(app.getHttpServer())
+      .post(`/api/v1/internationals/${intOrgId}/hqs/approve`)
+      .set('Cookie', superAdminCookies)
+      .send({
+        applicationId: hqAppId
+      });
     if (hqApproveRes.status !== 200 && hqApproveRes.status !== 201) throw new Error('HQ approve failed: ' + JSON.stringify(hqApproveRes.body));
 
-    const hqUserRow = await AppDataSource.query(`SELECT id, "organizationId" FROM users WHERE email = 'hqp3@example.com'`);
-    const hqPresidentId = hqUserRow[0].id;
-    const hqOrgId = hqUserRow[0].organizationId;
-
-    // 3. Setup: Create a Club branch
-    const clubRes = await request(app.getHttpServer()).post(`/api/v1/hqs/${hqOrgId}/clubs`).send({
-      name: 'Local Dog Club',
-      countryCode: 'US',
-      taxNumber: '9999',
-      registrationNumber: 'REG9999',
-      requesterId: hqPresidentId
-    });
-    if (clubRes.status !== 201) throw new Error('Branch failed: ' + JSON.stringify(clubRes.body));
-    clubOrgId = clubRes.body.id;
-
-    // 4. Setup: Register Club President (roleManager)
-    const clubPresRes = await request(app.getHttpServer()).post('/api/v1/auth/register').send({
-      organizationId: clubOrgId,
-      name: 'Club',
-      surname: 'President',
-      email: 'clubp3@example.com',
-      username: 'clubpresident',
-      role: 'roleManager',
-      countryCode: 'US',
-      phoneNumber: '+12025550124',
+    const hqLogin = await request(app.getHttpServer()).post('/api/v1/auth/login').send({
+      email: 'hqp3@example.com',
       password: 'password123'
     });
-    if (clubPresRes.status !== 201) throw new Error('Club pres reg failed: ' + JSON.stringify(clubPresRes.body));
-    const cpRow = await AppDataSource.query(`SELECT id FROM users WHERE email = 'clubp3@example.com'`);
-    clubPresidentId = cpRow[0].id;
+    const hqPresidentId = hqLogin.body.user.id;
+    const hqOrgId = hqLogin.body.user.organizationId;
+    hqPresidentCookies = hqLogin.headers['set-cookie'];
+
+    // 3. Setup: Create a Club branch
+    const clubRes = await request(app.getHttpServer())
+      .post(`/api/v1/hqs/${hqOrgId}/clubs`)
+      .set('Cookie', hqPresidentCookies)
+      .send({
+        name: 'New York Club Branch',
+        countryCode: 'US',
+        taxNumber: 'T999',
+        registrationNumber: 'R999',
+        presidentName: 'Club',
+        presidentSurname: 'President',
+        presidentEmail: 'clubp3@example.com',
+        presidentPasswordPlain: 'password123'
+      });
+    if (clubRes.status !== 201) throw new Error('Club create failed: ' + JSON.stringify(clubRes.body));
+    clubOrgId = clubRes.body.id;
+
+    // 4. Setup: Login as Club President (created with club)
+    const cpLogin = await request(app.getHttpServer()).post('/api/v1/auth/login').send({
+      email: 'clubp3@example.com',
+      password: 'password123'
+    });
+    clubPresidentId = cpLogin.body.user.id;
+    clubPresidentCookies = cpLogin.headers['set-cookie'];
+
     // Approve club president by HQ president
-    await request(app.getHttpServer()).post(`/api/v1/employees/${clubPresidentId}/approve`).send({ approverId: hqPresidentId });
+    await request(app.getHttpServer()).post(`/api/v1/employees/${clubPresidentId}/approve`)
+      .set('Cookie', hqPresidentCookies)
+      .send({});
 
     // 5. Setup: Register ordinary members (owner and breeder)
     const ownerRes = await request(app.getHttpServer()).post('/api/v1/auth/register').send({
@@ -135,9 +161,14 @@ describe('Stage 3 Flow (E2E) - Dogs and Breeds', () => {
       password: 'password123'
     });
     if (ownerRes.status !== 201) throw new Error('Owner reg failed: ' + JSON.stringify(ownerRes.body));
-    const owRow = await AppDataSource.query(`SELECT id FROM users WHERE email = 'owner3@example.com'`);
-    ownerId = owRow[0].id;
-    await request(app.getHttpServer()).post(`/api/v1/employees/${ownerId}/approve`).send({ approverId: clubPresidentId });
+    const owLogin = await request(app.getHttpServer()).post('/api/v1/auth/login').send({
+      email: 'owner3@example.com',
+      password: 'password123'
+    });
+    ownerId = owLogin.body.user.id;
+    await request(app.getHttpServer()).post(`/api/v1/employees/${ownerId}/approve`)
+      .set('Cookie', clubPresidentCookies)
+      .send({});
 
     const breederRes = await request(app.getHttpServer()).post('/api/v1/auth/register').send({
       organizationId: clubOrgId,
@@ -151,9 +182,14 @@ describe('Stage 3 Flow (E2E) - Dogs and Breeds', () => {
       password: 'password123'
     });
     if (breederRes.status !== 201) throw new Error('Breeder reg failed: ' + JSON.stringify(breederRes.body));
-    const brRow = await AppDataSource.query(`SELECT id FROM users WHERE email = 'breeder3@example.com'`);
-    breederId = brRow[0].id;
-    await request(app.getHttpServer()).post(`/api/v1/employees/${breederId}/approve`).send({ approverId: clubPresidentId });
+    const brLogin = await request(app.getHttpServer()).post('/api/v1/auth/login').send({
+      email: 'breeder3@example.com',
+      password: 'password123'
+    });
+    breederId = brLogin.body.user.id;
+    await request(app.getHttpServer()).post(`/api/v1/employees/${breederId}/approve`)
+      .set('Cookie', clubPresidentCookies)
+      .send({});
   });
 
   afterAll(async () => {
@@ -164,12 +200,12 @@ describe('Stage 3 Flow (E2E) - Dogs and Breeds', () => {
   it('1. Club President submits a Breed Application', async () => {
     const res = await request(app.getHttpServer())
       .post('/api/v1/breeds/applications')
+      .set('Cookie', clubPresidentCookies)
       .send({
         names: {
           en: 'German Shepherd',
           uk: 'Німецька вівчарка'
-        },
-        requesterId: clubPresidentId
+        }
       });
 
     if (res.status !== 201) console.log('Test 1 error:', res.body);
@@ -181,7 +217,8 @@ describe('Stage 3 Flow (E2E) - Dogs and Breeds', () => {
   it('2. SuperAdmin approves the Breed Application', async () => {
     const res = await request(app.getHttpServer())
       .post(`/api/v1/breeds/applications/${breedApplicationId}/approve`)
-      .send({ approverId: superAdminId });
+      .set('Cookie', superAdminCookies)
+      .send({});
 
     expect(res.status).toBe(201);
     expect(res.body).toHaveProperty('breedId');
@@ -189,7 +226,9 @@ describe('Stage 3 Flow (E2E) - Dogs and Breeds', () => {
   });
 
   it('3. Anyone can fetch the list of breeds', async () => {
-    const res = await request(app.getHttpServer()).get('/api/v1/breeds');
+    const res = await request(app.getHttpServer())
+      .get('/api/v1/breeds')
+      .set('Cookie', superAdminCookies);
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBeTruthy();
     expect(res.body.length).toBeGreaterThan(0);
@@ -202,14 +241,14 @@ describe('Stage 3 Flow (E2E) - Dogs and Breeds', () => {
   it('4. Club President registers a dog for a member', async () => {
     const res = await request(app.getHttpServer())
       .post('/api/v1/dogs')
+      .set('Cookie', clubPresidentCookies)
       .send({
         ownerId: ownerId,
         breederId: breederId,
         breedId: breedId,
         name: 'Rex',
         sex: 'male',
-        dateBirth: '12-05-2022',
-        requesterId: clubPresidentId
+        dateBirth: '12-05-2022'
       });
 
     expect(res.status).toBe(201);
@@ -218,7 +257,8 @@ describe('Stage 3 Flow (E2E) - Dogs and Breeds', () => {
 
   it('5. Fetch dogs by ownerId', async () => {
     const res = await request(app.getHttpServer())
-      .get(`/api/v1/dogs?ownerId=${ownerId}`);
+      .get(`/api/v1/dogs?ownerId=${ownerId}`)
+      .set('Cookie', clubPresidentCookies);
       
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBeTruthy();

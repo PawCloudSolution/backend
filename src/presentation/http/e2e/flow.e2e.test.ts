@@ -24,6 +24,7 @@ describe('End-to-End User Flow', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.use(require('cookie-parser')());
     await app.init();
   });
 
@@ -55,6 +56,8 @@ describe('End-to-End User Flow', () => {
     expect(res.status).toBe(201);
   });
 
+  let superAdminCookies: any;
+
   it('2. should login as super admin and extract ID', async () => {
     const res = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
@@ -64,10 +67,10 @@ describe('End-to-End User Flow', () => {
       });
 
     expect(res.status).toBe(201); // NestJS POST default is 201
-    expect(res.body.tokens.accessToken).toBeDefined();
     expect(res.body.user.id).toBeDefined();
 
     superAdminId = res.body.user.id;
+    superAdminCookies = res.headers['set-cookie'];
   });
 
   it('3. should submit an application for a new International org', async () => {
@@ -93,13 +96,13 @@ describe('End-to-End User Flow', () => {
 
   it('4. should approve the submitted application by the super admin', async () => {
     expect(applicationId).toBeDefined();
-    expect(superAdminId).toBeDefined();
+    expect(superAdminCookies).toBeDefined();
 
     const res = await request(app.getHttpServer())
       .post('/api/v1/internationals/approve')
+      .set('Cookie', superAdminCookies)
       .send({
-        applicationId,
-        approverId: superAdminId
+        applicationId
       });
 
     expect(res.status).toBe(201);
@@ -115,6 +118,6 @@ describe('End-to-End User Flow', () => {
       });
 
     expect(res.status).toBe(201);
-    expect(res.body.tokens.accessToken).toBeDefined();
+    expect(res.headers['set-cookie']).toBeDefined();
   });
 });

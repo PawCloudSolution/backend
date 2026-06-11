@@ -5,7 +5,7 @@ export class JwtTokenService implements ITokenService {
   private readonly accessSecret = process.env.JWT_ACCESS_SECRET || 'fallback_access_secret';
   private readonly refreshSecret = process.env.JWT_REFRESH_SECRET || 'fallback_refresh_secret';
   
-  private readonly accessExpiresIn = '15m';
+  private readonly accessExpiresIn = '10m';
   private readonly refreshExpiresIn = '7d';
 
   public generateTokens(payload: TokenPayload): TokenPair {
@@ -20,6 +20,7 @@ export class JwtTokenService implements ITokenService {
       const decoded = jwt.verify(token, this.accessSecret) as jwt.JwtPayload;
       return {
         userId: decoded.userId,
+        role: decoded.role,
         organizationId: decoded.organizationId
       };
     } catch (error) {
@@ -32,6 +33,7 @@ export class JwtTokenService implements ITokenService {
       const decoded = jwt.verify(token, this.refreshSecret) as jwt.JwtPayload;
       return {
         userId: decoded.userId,
+        role: decoded.role,
         organizationId: decoded.organizationId
       };
     } catch (error) {

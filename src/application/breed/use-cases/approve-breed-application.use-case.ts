@@ -20,7 +20,7 @@ export class ApproveBreedApplicationUseCase {
 
     // Check permissions
     if (!approver.isSuperAdmin()) {
-      if (!approver.isRoleManager()) {
+      if (!approver.isInternationalPresident()) {
         throw new Error('Only superAdmin or International President can approve breed applications');
       }
       const orgId = approver.getOrganizationId();

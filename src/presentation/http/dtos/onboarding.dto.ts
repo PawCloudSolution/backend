@@ -70,15 +70,9 @@ export class SubmitHqApplicationDto {
 export class ApproveInternationalApplicationDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'The ID of the application to approve', type: String })
   applicationId: string;
-
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174001', description: 'The ID of the user (superAdmin) approving the application', type: String })
-  approverId: string;
 }
 
 export class ApproveHqApplicationDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'The ID of the application to approve', type: String })
   applicationId: string;
-
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174001', description: 'The ID of the user (superAdmin) approving the application', type: String })
-  approverId: string;
 }

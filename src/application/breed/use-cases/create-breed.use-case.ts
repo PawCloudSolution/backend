@@ -21,18 +21,18 @@ export class CreateBreedUseCase {
       throw new Error('Requester not found');
     }
 
-    // Only superAdmin or HQ President can create directly
+    // Only superAdmin or International President can create directly
     if (!requester.isSuperAdmin()) {
-      if (!requester.isRoleManager()) {
-        throw new Error('Only superAdmin or HQ President can create breeds');
+      if (!requester.isInternationalPresident()) {
+        throw new Error('Only international presidents and super admins can create breeds directly');
       }
       const orgId = requester.getOrganizationId();
       if (!orgId) {
         throw new Error('Requester has no organization');
       }
       const org = await this.organizationRepository.findById(orgId);
-      if (!org || org.getType() !== 'headquarter') {
-        throw new Error('Only superAdmin or HQ President can create breeds');
+      if (!org || org.getType() !== 'international') {
+        throw new Error('Only superAdmin or International President can create breeds');
       }
     }
 

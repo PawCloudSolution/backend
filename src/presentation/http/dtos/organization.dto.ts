@@ -13,6 +13,18 @@ export class CreateClubDtoHttp {
   @ApiPropertyOptional({ example: 'REG123456', type: String, nullable: true })
   registrationNumber?: string;
 
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'ID of the requester (HQ president or superAdmin)', type: String })
-  requesterId: string;
+  @ApiProperty({ example: 'John', type: String })
+  presidentName: string;
+
+  @ApiProperty({ example: 'Doe', type: String })
+  presidentSurname: string;
+
+  @ApiProperty({ example: 'club.president@example.com', type: String })
+  presidentEmail: string;
+
+  @ApiPropertyOptional({ example: '+12025550123', type: String, nullable: true })
+  presidentPhone?: string;
+
+  @ApiProperty({ example: 'securepassword123', type: String })
+  presidentPasswordPlain: string;
 }

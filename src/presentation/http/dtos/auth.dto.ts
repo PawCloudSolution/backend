@@ -36,3 +36,30 @@ export class LoginUserDto {
   @ApiProperty({ example: 'strongpassword123', type: String })
   password: string;
 }
+
+export class TokenPairDto {
+  @ApiProperty({ type: String })
+  accessToken: string;
+
+  @ApiProperty({ type: String })
+  refreshToken: string;
+}
+
+export class UserPayloadDto {
+  @ApiProperty({ type: String })
+  id: string;
+
+  @ApiProperty({ type: String })
+  email: string;
+
+  @ApiProperty({ type: String })
+  role: string;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  organizationId: string | null;
+}
+
+export class LoginResponseDto {
+  @ApiProperty({ type: () => UserPayloadDto })
+  user: UserPayloadDto;
+}

@@ -21,8 +21,8 @@ export class SubmitBreedApplicationUseCase {
       throw new Error('Requester not found');
     }
 
-    if (!requester.isRoleManager() && !requester.isEmployee()) {
-      throw new Error('Only club employees or managers can submit breed applications');
+    if (!requester.isAnyPresident() && !requester.isEmployee()) {
+      throw new Error('Only presidents or employees can submit breed applications');
     }
 
     const requesterOrgId = requester.getOrganizationId();

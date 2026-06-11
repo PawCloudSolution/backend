@@ -4,6 +4,7 @@ import { HqController } from '../controllers/hq.controller';
 import { GetOrganizationsUseCase } from '../../../application/organization/use-cases/get-organizations.use-case';
 import { SubmitOrganizationApplicationUseCase } from '../../../application/onboarding/use-cases/submit-hq-application.use-case';
 import { ApproveOrganizationApplicationUseCase } from '../../../application/onboarding/use-cases/approve-hq-application.use-case';
+import { GetPendingApplicationsUseCase } from '../../../application/onboarding/use-cases/get-pending-applications.use-case';
 import { BcryptPasswordHasher } from '../../../infrastructure/auth/bcrypt-password-hasher';
 import {
   DatabaseModule,
@@ -37,6 +38,11 @@ import { IUserRepository } from '../../../application/auth/ports/user.repository
       provide: ApproveOrganizationApplicationUseCase,
       useFactory: (appRepo: IOrganizationApplicationRepository, orgRepo: IOrganizationRepository, userRepo: IUserRepository) => new ApproveOrganizationApplicationUseCase(appRepo, orgRepo, userRepo),
       inject: [ORGANIZATION_APPLICATION_REPOSITORY_TOKEN, ORGANIZATION_REPOSITORY_TOKEN, USER_REPOSITORY_TOKEN],
+    },
+    {
+      provide: GetPendingApplicationsUseCase,
+      useFactory: (appRepo: IOrganizationApplicationRepository) => new GetPendingApplicationsUseCase(appRepo),
+      inject: [ORGANIZATION_APPLICATION_REPOSITORY_TOKEN],
     },
   ],
 })

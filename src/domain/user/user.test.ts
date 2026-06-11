@@ -25,39 +25,51 @@ describe('User Aggregate', () => {
     expect(user.getPhoneNumber()).toBe('+12133734253');
     expect(user.getRole().toString()).toBe('member');
     expect(user.isMember()).toBe(true);
-    expect(user.isRoleManager()).toBe(false);
+    expect(user.isAnyPresident()).toBe(false);
   });
 
-  it("should allow a manager to change another user's role", () => {
-    const manager = User.register({ ...validRawData, role: 'roleManager', username: 'manager1' });
-    const user = User.register({ ...validRawData, username: 'user123' });
-
+  it('should allow changing role if actor is manager', () => {
+    const manager = User.register({ ...validRawData, role: 'branchPresident', username: 'manager_xyz' });
+    const user = User.register({ ...validRawData, username: 'user_two_xyz' });
+    
     user.changeRoleBy(manager, UserRoleValueObject.create('employee'));
-    expect(user.isEmployee()).toBe(true);
+    expect(user.getRole().toString()).toBe('employee');
   });
 
   it('should not allow a user to change their own role', () => {
-    const manager = User.register({ ...validRawData, role: 'roleManager' });
+    const manager = User.register({ ...validRawData, role: 'branchPresident', username: 'manager_xyz' });
     expect(() => manager.changeRoleBy(manager, UserRoleValueObject.create('employee'))).toThrow('User cannot change own role');
   });
 
-  it('should not allow a non-manager to change roles', () => {
+  it('should prevent non-managers from changing roles', () => {
     const member = User.register(validRawData);
-    const user = User.register({ ...validRawData, username: 'user123' });
-    expect(() => user.changeRoleBy(member, UserRoleValueObject.create('roleManager'))).toThrow('Only a roleManager or superAdmin can change roles');
+    const user = User.register({ ...validRawData, username: 'user_two_xyz' });
+    expect(() => user.changeRoleBy(member, UserRoleValueObject.create('branchPresident'))).toThrow('Only a roleManager or superAdmin can change roles');
+  });
+
+  it('should approve a user successfully if actor is manager', () => {
+    const manager = User.register({ ...validRawData, role: 'branchPresident', username: 'manager_xyz' });
+    const user = User.register({ ...validRawData, username: 'user_two_xyz' });
+    
+    user.approve(manager);
+    expect(user.getStatus()).toBe('active');
   });
 
   it('should throw an error if assigning the same role', () => {
-    const manager = User.register({ ...validRawData, role: 'roleManager', username: 'manager1' });
+    const manager = User.register({ ...validRawData, role: 'branchPresident', username: 'manager_xyz' });
     const user = User.register(validRawData); // is member
     expect(() => user.changeRoleBy(manager, UserRoleValueObject.create('member'))).toThrow('User already has this role');
   });
 
-  it('should update user properties', () => {
-    const user = User.register(validRawData);
-    user.updateName('Jane');
-    user.updateSurname('Smith');
-    expect(user.getName()).toBe('Jane');
-    expect(user.getSurname()).toBe('Smith');
+  it('should restore a user correctly', () => {
+    const user = User.restore({
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      ...validRawData,
+      role: 'branchPresident',
+      username: 'manager_xyz',
+      status: 'active'
+    });
+    expect(user.getId()).toBe('550e8400-e29b-41d4-a716-446655440000');
+    expect(user.isAnyPresident()).toBe(true);
   });
 });

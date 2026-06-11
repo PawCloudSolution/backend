@@ -3,4 +3,5 @@ import { OrganizationApplication } from '../../../domain/organization-applicatio
 export interface IOrganizationApplicationRepository {
   save(application: OrganizationApplication): Promise<void>;
   findById(id: string): Promise<OrganizationApplication | null>;
+  findPending(type?: string): Promise<OrganizationApplication[]>;
 }

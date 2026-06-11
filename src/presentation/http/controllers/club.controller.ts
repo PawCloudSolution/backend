@@ -1,11 +1,16 @@
-import { Controller, Get, Post, Body, Param, HttpException, HttpStatus, Inject } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, HttpException, HttpStatus, Inject, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { RolesGuard } from '../guards/roles.guard';
+import { Roles } from '../decorators/roles.decorator';
+import { CurrentUser } from '../decorators/current-user.decorator';
 import { GetOrganizationsUseCase } from '../../../application/organization/use-cases/get-organizations.use-case';
 import { CreateBranchUseCase } from '../../../application/organization/use-cases/create-branch.use-case';
 import { CreateClubDtoHttp } from '../dtos/organization.dto';
 
 @ApiTags('Clubs')
 @ApiBearerAuth()
+@ApiParam({ name: 'hqId', type: 'string', description: 'Headquarters ID' })
 @Controller('api/v1/hqs/:hqId/clubs')
 export class ClubController {
   constructor(
@@ -34,10 +39,12 @@ export class ClubController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create a local club under an HQ (HQ President or SuperAdmin)' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('superAdmin', 'nationalPresident')
+  @ApiOperation({ summary: 'Create a new Club (Branch) under a Headquarter' })
   @ApiBody({ type: CreateClubDtoHttp })
   @ApiResponse({ status: 201, description: 'Club created successfully' })
-  public async createClub(@Param('hqId') hqId: string, @Body() body: CreateClubDtoHttp) {
+  public async createClub(@CurrentUser() user: any, @Param('hqId') hqId: string, @Body() body: CreateClubDtoHttp) {
     try {
       const branch = await this.createBranchUseCase.execute({
         parentOrganizationId: hqId,
@@ -45,7 +52,12 @@ export class ClubController {
         countryCode: body.countryCode,
         taxNumber: body.taxNumber,
         registrationNumber: body.registrationNumber,
-        requesterId: body.requesterId
+        requesterId: user.id,
+        presidentName: body.presidentName,
+        presidentSurname: body.presidentSurname,
+        presidentEmail: body.presidentEmail,
+        presidentPhone: body.presidentPhone,
+        presidentPasswordPlain: body.presidentPasswordPlain
       });
       return { message: 'Club created successfully', id: branch.getId() };
     } catch (error: any) {

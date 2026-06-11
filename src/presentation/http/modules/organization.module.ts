@@ -20,8 +20,8 @@ import { IUserRepository } from '../../../application/auth/ports/user.repository
     },
     {
       provide: CreateBranchUseCase,
-      useFactory: (orgRepo: IOrganizationRepository, userRepo: IUserRepository) => new CreateBranchUseCase(orgRepo, userRepo),
-      inject: [ORGANIZATION_REPOSITORY_TOKEN, USER_REPOSITORY_TOKEN],
+      useFactory: (orgRepo: IOrganizationRepository, userRepo: IUserRepository, hasher: any) => new CreateBranchUseCase(orgRepo, userRepo, hasher),
+      inject: [ORGANIZATION_REPOSITORY_TOKEN, USER_REPOSITORY_TOKEN, 'PASSWORD_HASHER'],
     },
     {
       provide: GetPendingEmployeesUseCase,

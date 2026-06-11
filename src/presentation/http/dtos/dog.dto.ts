@@ -18,7 +18,4 @@ export class RegisterDogDtoHttp {
 
   @ApiProperty({ example: '15-05-2020', description: 'Date of birth in DD-MM-YYYY format', type: String })
   dateBirth: string;
-
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174003', description: 'ID of the employee registering the dog', type: String })
-  requesterId: string;
 }

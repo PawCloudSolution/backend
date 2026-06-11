@@ -31,4 +31,13 @@ export class TypeOrmOrganizationApplicationRepository implements IOrganizationAp
     if (!raw) return null;
     return OrganizationApplication.restore(raw);
   }
+
+  async findPending(type?: string): Promise<OrganizationApplication[]> {
+    const query: any = { status: 'pending' };
+    if (type) {
+      query.applicationType = type;
+    }
+    const rawList = await this.repository.find({ where: query });
+    return rawList.map(raw => OrganizationApplication.restore(raw));
+  }
 }

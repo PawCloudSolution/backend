@@ -136,7 +136,8 @@ describe('Auth Use Cases', () => {
       expect(mockPasswordHasher.compare).toHaveBeenCalledWith('plain_password', 'hashed_secret_password_lengthy_enough');
       expect(mockTokenService.generateTokens).toHaveBeenCalledWith({
         userId: mockUser.getId(),
-        organizationId: mockUser.getOrganizationId()
+        organizationId: mockUser.getOrganizationId(),
+        role: mockUser.getRole().toString()
       });
     });
 

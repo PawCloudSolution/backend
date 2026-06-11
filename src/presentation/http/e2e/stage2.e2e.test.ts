@@ -24,6 +24,7 @@ describe('Stage 2 E2E Flow (Employees and Branches)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.use(require('cookie-parser')());
     await app.init();
   });
 
@@ -33,6 +34,9 @@ describe('Stage 2 E2E Flow (Employees and Branches)', () => {
       await AppDataSource.destroy();
     }
   });
+
+  let superAdminCookies: any;
+  let presidentCookies: any;
 
   it('1. setup: create superadmin and HQ', async () => {
     const saRes = await request(app.getHttpServer()).post('/api/v1/auth/register').send({
@@ -53,10 +57,14 @@ describe('Stage 2 E2E Flow (Employees and Branches)', () => {
       password: 'superadminpass'
     });
     if (resLogin.status !== 201) throw new Error('SA Login failed: ' + JSON.stringify(resLogin.body));
-    superAdminId = (jwt.decode(resLogin.body.tokens.accessToken) as any).userId;
+    superAdminId = resLogin.body.user.id;
+    superAdminCookies = resLogin.headers['set-cookie'];
 
     // 1.25 Submit and Approve International
-    const resIntSubmit = await request(app.getHttpServer()).post('/api/v1/internationals/submit').send({
+    const resIntSubmit = await request(app.getHttpServer())
+      .post('/api/v1/internationals/submit')
+      .set('Cookie', superAdminCookies)
+      .send({
       documents: ['http://example.com/doc1.pdf'],
       organizationName: 'Int Org',
       countryCode: 'US',
@@ -69,12 +77,14 @@ describe('Stage 2 E2E Flow (Employees and Branches)', () => {
       presidentPasswordPlain: 'intpass'
     });
     if (resIntSubmit.status !== 201) throw new Error('Int submit failed: ' + JSON.stringify(resIntSubmit.body));
-    const intId = resIntSubmit.body.id;
+    const intAppId = resIntSubmit.body.id;
 
-    const resIntApprove = await request(app.getHttpServer()).post('/api/v1/internationals/approve').send({
-      applicationId: intId,
-      approverId: superAdminId
-    });
+    const resIntApprove = await request(app.getHttpServer())
+      .post('/api/v1/internationals/approve')
+      .set('Cookie', superAdminCookies)
+      .send({
+        applicationId: intAppId
+      });
 
     const resIntLogin = await request(app.getHttpServer()).post('/api/v1/auth/login').send({
       email: 'int@example.com',
@@ -83,35 +93,42 @@ describe('Stage 2 E2E Flow (Employees and Branches)', () => {
     const intOrgId = resIntLogin.body.user.organizationId;
 
     // 1.3 Submit application for HQ
-    const resApp = await request(app.getHttpServer()).post(`/api/v1/internationals/${intOrgId}/hqs/submit`).send({
-      documents: ['http://example.com/doc.pdf'],
-      organizationName: 'UKU',
-      countryCode: 'UA',
-      taxNumber: '12345678',
-      registrationNumber: 'REG123',
-      presidentName: 'John',
-      presidentSurname: 'Doe',
-      presidentEmail: 'president1@pawclub.com',
-      presidentPhone: '+380501234567',
-      presidentPasswordPlain: 'prespass'
-    });
+    const intPresidentCookies = resIntLogin.headers['set-cookie'];
+    const resApp = await request(app.getHttpServer())
+      .post(`/api/v1/internationals/${intOrgId}/hqs/submit`)
+      .set('Cookie', intPresidentCookies)
+      .send({
+        documents: ['http://example.com/doc.pdf'],
+        organizationName: 'UKU',
+        countryCode: 'UA',
+        taxNumber: '12345678',
+        registrationNumber: 'REG-123',
+        presidentName: 'HQ',
+        presidentSurname: 'President',
+        presidentEmail: 'hq@example.com',
+        presidentPhone: '+380501234567',
+        presidentPasswordPlain: 'hqpass'
+      });
     if (resApp.status !== 201) throw new Error('HQ submit failed: ' + JSON.stringify(resApp.body));
     const hqAppId = resApp.body.id;
 
-    // 1.4 Approve HQ
-    const resApprove = await request(app.getHttpServer()).post(`/api/v1/internationals/${intOrgId}/hqs/approve`).send({
-      applicationId: hqAppId,
-      approverId: superAdminId
-    });
+    // 1.4 Approve HQ application
+    const resApprove = await request(app.getHttpServer())
+      .post(`/api/v1/internationals/${intOrgId}/hqs/approve`)
+      .set('Cookie', superAdminCookies)
+      .send({
+        applicationId: hqAppId
+      });
+    if (resApprove.status !== 200 && resApprove.status !== 201) throw new Error('HQ approve failed: ' + JSON.stringify(resApprove.body));
 
     // 1.5 Login president to get org ID
     const resPresLogin = await request(app.getHttpServer()).post('/api/v1/auth/login').send({
-      email: 'president1@pawclub.com',
-      password: 'prespass'
+      email: 'hq@example.com',
+      password: 'hqpass'
     });
     if (resPresLogin.status !== 201) throw new Error('Pres Login failed: ' + JSON.stringify(resPresLogin.body));
-    const decodedPres = jwt.decode(resPresLogin.body.tokens.accessToken) as any;
-    presidentId = decodedPres.userId;
+    presidentId = resPresLogin.body.user.id;
+    presidentCookies = resPresLogin.headers['set-cookie'];
     hqId = resPresLogin.body.user.organizationId;
   });
 
@@ -136,7 +153,7 @@ describe('Stage 2 E2E Flow (Employees and Branches)', () => {
       username: 'employee1',
       role: 'employee',
       countryCode: 'US',
-      phoneNumber: '+12025550111',
+      phoneNumber: '+12025550234',
       password: 'emppass'
     });
     if (res.status !== 201) {
@@ -148,12 +165,13 @@ describe('Stage 2 E2E Flow (Employees and Branches)', () => {
       email: 'employee1@pawclub.com',
       password: 'emppass'
     });
-    employeeId = (jwt.decode(resLogin.body.tokens.accessToken) as any).userId;
+    employeeId = resLogin.body.user.id;
   });
 
   it('4. should list pending employees', async () => {
     const res = await request(app.getHttpServer())
-      .get(`/api/v1/employees/pending?organizationId=${hqId}&requesterId=${presidentId}`);
+      .get(`/api/v1/employees/pending?organizationId=${hqId}`)
+      .set('Cookie', presidentCookies);
     
     expect(res.status).toBe(200);
     expect(res.body.length).toBe(1);
@@ -163,25 +181,31 @@ describe('Stage 2 E2E Flow (Employees and Branches)', () => {
   it('5. should approve the pending employee', async () => {
     const res = await request(app.getHttpServer())
       .post(`/api/v1/employees/${employeeId}/approve`)
-      .send({ approverId: presidentId });
+      .set('Cookie', presidentCookies)
+      .send({});
 
     expect(res.status).toBe(201);
 
     // Verify list is empty now
     const resPending = await request(app.getHttpServer())
-      .get(`/api/v1/employees/pending?organizationId=${hqId}&requesterId=${presidentId}`);
+      .get(`/api/v1/employees/pending?organizationId=${hqId}`)
+      .set('Cookie', presidentCookies);
     expect(resPending.body.length).toBe(0);
   });
 
   it('6. should create a branch under the HQ', async () => {
     const res = await request(app.getHttpServer())
       .post(`/api/v1/hqs/${hqId}/clubs`)
+      .set('Cookie', presidentCookies)
       .send({
-        name: 'Kyiv Dogs Club',
-        countryCode: 'UA',
-        taxNumber: '987654321',
-        registrationNumber: 'REG987',
-        requesterId: presidentId
+        name: 'New York Club Branch',
+        countryCode: 'US',
+        taxNumber: 'T999',
+        registrationNumber: 'R999',
+        presidentName: 'Club',
+        presidentSurname: 'President',
+        presidentEmail: 'clubp2@example.com',
+        presidentPasswordPlain: 'password123'
       });
 
     if (res.status !== 201) {

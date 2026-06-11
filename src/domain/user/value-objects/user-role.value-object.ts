@@ -1,4 +1,4 @@
-export type UserRoleEnum = 'member' | 'employee' | 'roleManager' | 'superAdmin';
+export type UserRoleEnum = 'member' | 'employee' | 'branchPresident' | 'nationalPresident' | 'internationalPresident' | 'superAdmin';
 
 export class UserRoleValueObject {
   private constructor(
@@ -6,7 +6,7 @@ export class UserRoleValueObject {
   ) {}
 
   public static create(value: string) {
-    if (!['member', 'employee', 'roleManager', 'superAdmin'].includes(value)) {
+    if (!['member', 'employee', 'branchPresident', 'nationalPresident', 'internationalPresident', 'superAdmin'].includes(value)) {
       throw new Error('Invalid user role');
     }
 
@@ -31,8 +31,20 @@ export class UserRoleValueObject {
     return this.value === 'employee';
   }
 
-  public isRoleManager() {
-    return this.value === 'roleManager';
+  public isBranchPresident() {
+    return this.value === 'branchPresident';
+  }
+
+  public isNationalPresident() {
+    return this.value === 'nationalPresident';
+  }
+
+  public isInternationalPresident() {
+    return this.value === 'internationalPresident';
+  }
+
+  public isAnyPresident() {
+    return this.isBranchPresident() || this.isNationalPresident() || this.isInternationalPresident();
   }
 
   public isSuperAdmin() {

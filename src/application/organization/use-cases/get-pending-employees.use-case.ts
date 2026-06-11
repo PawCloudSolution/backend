@@ -10,8 +10,8 @@ export class GetPendingEmployeesUseCase {
       throw new Error('Requester not found');
     }
 
-    if (!requester.isRoleManager() && !requester.isSuperAdmin()) {
-      throw new Error('Not authorized to view pending employees');
+    if (!requester.isAnyPresident() && !requester.isSuperAdmin()) {
+      throw new Error('Only presidents or super admins can view pending employees');
     }
 
     if (requester.getOrganizationId() !== organizationId && !requester.isSuperAdmin()) {

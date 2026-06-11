@@ -38,7 +38,7 @@ export class ApproveOrganizationApplicationUseCase {
       surname: application.getPresidentSurname(),
       email: application.getPresidentEmail(),
       username: application.getPresidentEmail(),
-      role: 'roleManager',
+      role: application.getApplicationType() === 'international' ? 'internationalPresident' : 'nationalPresident',
       countryCode: application.getCountryCode(),
       phoneNumber: application.getPresidentPhone(),
       hashedPassword: application.getPresidentPasswordHash(),

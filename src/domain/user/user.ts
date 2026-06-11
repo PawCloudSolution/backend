@@ -138,8 +138,20 @@ export class User {
     return this.hashedPassword.toString();
   }
 
-  public isRoleManager(): boolean {
-    return this.role.isRoleManager();
+  public isAnyPresident(): boolean {
+    return this.role.isAnyPresident();
+  }
+
+  public isInternationalPresident(): boolean {
+    return this.role.isInternationalPresident();
+  }
+
+  public isNationalPresident(): boolean {
+    return this.role.isNationalPresident();
+  }
+
+  public isBranchPresident(): boolean {
+    return this.role.isBranchPresident();
   }
 
   public isSuperAdmin(): boolean {
@@ -155,7 +167,7 @@ export class User {
   }
 
   public changeRoleBy(actor: User, newRole: UserRoleValueObject): void {
-    if (!actor.isRoleManager() && !actor.isSuperAdmin()) {
+    if (!actor.isAnyPresident() && !actor.isSuperAdmin()) {
       throw new Error('Only a roleManager or superAdmin can change roles');
     }
 
@@ -171,7 +183,7 @@ export class User {
   }
 
   public approve(actor: User): void {
-    if (!actor.isRoleManager() && !actor.isSuperAdmin()) {
+    if (!actor.isAnyPresident() && !actor.isSuperAdmin()) {
       throw new Error('Only a roleManager or superAdmin can approve users');
     }
     
@@ -182,7 +194,7 @@ export class User {
   }
 
   public suspend(actor: User): void {
-    if (!actor.isRoleManager() && !actor.isSuperAdmin()) {
+    if (!actor.isAnyPresident() && !actor.isSuperAdmin()) {
       throw new Error('Only a roleManager or superAdmin can suspend users');
     }
     this.status = UserStatusValueObject.create('suspended');
