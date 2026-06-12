@@ -21,10 +21,10 @@ classDiagram
 
 ## Бизнес-правила
 - **Иерархия**: 
-  - Тип `headquarter` (Главное управление) **не может** иметь `parentOrganizationId` (он находится на вершине иерархии).
-  - Любой другой тип (например, `club`, `kennel`, `training_ground`) **обязан** ссылаться на родительскую организацию.
+  - Тип `international` (Международная организация) **не может** иметь `parentOrganizationId` (он находится на вершине иерархии).
+  - Любой другой тип (например, `headquarter`, `club`, `kennel`, `training_ground`) **обязан** ссылаться на родительскую организацию.
 - **Страна**: Каждая организация привязана к стране (`CountryCode`). Это критично для дальнейшей валидации локальных налоговых и регистрационных номеров (ИНН, ЕГРПОУ).
 
 ## Value Objects
 - `OrganizationName`: Длина от 3 до 100 символов.
-- `OrganizationType`: `headquarter`, `club`, `kennel`, `training_ground`.
+- `OrganizationType`: `international`, `headquarter`, `club`, `kennel`, `training_ground`.
