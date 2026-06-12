@@ -9,7 +9,7 @@ import { DogEntity } from './entities/dog.entity';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
-  url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5433/paw_cloud',
+  url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5439/paw_cloud',
   synchronize: true, // Auto create tables based on entities for development
   logging: false,
   entities: [
