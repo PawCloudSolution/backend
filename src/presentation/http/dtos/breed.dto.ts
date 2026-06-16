@@ -10,6 +10,14 @@ export class BreedNamesDto {
   [languageCode: string]: string | undefined;
 }
 
+export class AddBreedLanguageDtoHttp {
+  @ApiProperty({ example: 'fr', description: 'Language code (e.g. en, uk, fr)', type: String })
+  languageCode: string;
+
+  @ApiProperty({ example: 'Berger Allemand', description: 'Name of the breed in the specified language', type: String })
+  name: string;
+}
+
 export class CreateBreedDtoHttp {
   @ApiProperty({ type: 'object', additionalProperties: { type: 'string' }, example: { en: 'Golden Retriever', ru: 'Золотистый ретривер' } })
   names: { [languageCode: string]: string };

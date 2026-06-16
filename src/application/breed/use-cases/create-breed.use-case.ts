@@ -2,6 +2,7 @@ import { Breed } from '../../../domain/breed/breed';
 import { IBreedRepository } from '../ports/breed.repository.interface';
 import { IUserRepository } from '../../auth/ports/user.repository.interface';
 import { IOrganizationRepository } from '../../organization/ports/organization.repository.interface';
+import { OrganizationContextService } from '../../organization/services/organization-context.service';
 
 export interface CreateBreedDto {
   names: { [languageCode: string]: string };
@@ -12,7 +13,8 @@ export class CreateBreedUseCase {
   constructor(
     private readonly breedRepository: IBreedRepository,
     private readonly userRepository: IUserRepository,
-    private readonly organizationRepository: IOrganizationRepository
+    private readonly organizationRepository: IOrganizationRepository,
+    private readonly organizationContextService: OrganizationContextService
   ) {}
 
   public async execute(dto: CreateBreedDto): Promise<Breed> {
@@ -36,23 +38,9 @@ export class CreateBreedUseCase {
       }
     }
 
-    let internationalId: string | null = null;
-    let orgId = requester.getOrganizationId();
-    if (orgId) {
-      let currentOrg = await this.organizationRepository.findById(orgId);
-      while (currentOrg) {
-        if (currentOrg.getType() === 'international') {
-          internationalId = currentOrg.getId();
-          break;
-        }
-        const parentId = currentOrg.getParentOrganizationId();
-        if (!parentId) break;
-        currentOrg = await this.organizationRepository.findById(parentId);
-      }
-    }
-    
+    const internationalId = await this.organizationContextService.getInternationalIdForUser(dto.requesterId);
     if (!internationalId) {
-      throw new Error('Cannot determine international organization context');
+      throw new Error('Cannot determine international organization context for breed creation');
     }
 
     const breed = Breed.create(dto.names, internationalId);

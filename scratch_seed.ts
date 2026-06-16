@@ -3,14 +3,14 @@ import * as bcrypt from 'bcrypt';
 
 async function run() {
   await AppDataSource.initialize();
-  await AppDataSource.dropDatabase();
-  await AppDataSource.synchronize(true);
+  // await AppDataSource.dropDatabase();
+  // await AppDataSource.synchronize(true);
 
   const hashed = await bcrypt.hash('superadminpass', 10);
   await AppDataSource.query(`
     INSERT INTO users (id, name, surname, email, username, role, "countryCode", "hashedPassword", status, "createdAt", "updatedAt")
     VALUES (
-      '0acfe545-0000-0000-0000-000000000000',
+      gen_random_uuid(),
       'Super',
       'Admin',
       'superadmin@example.com',
@@ -21,7 +21,7 @@ async function run() {
       'active',
       NOW(),
       NOW()
-    )
+    ) ON CONFLICT (email) DO UPDATE SET "hashedPassword" = $1;
   `, [hashed]);
 
   console.log('Database synced and superadmin created');

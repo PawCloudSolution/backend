@@ -2,6 +2,7 @@ import { BreedApplication } from '../../../domain/breed/breed-application';
 import { IBreedApplicationRepository } from '../ports/breed-application.repository.interface';
 import { IUserRepository } from '../../auth/ports/user.repository.interface';
 import { IOrganizationRepository } from '../../organization/ports/organization.repository.interface';
+import { OrganizationContextService } from '../../organization/services/organization-context.service';
 
 export interface SubmitBreedApplicationDto {
   names: { [languageCode: string]: string };
@@ -12,7 +13,8 @@ export class SubmitBreedApplicationUseCase {
   constructor(
     private readonly breedApplicationRepository: IBreedApplicationRepository,
     private readonly userRepository: IUserRepository,
-    private readonly organizationRepository: IOrganizationRepository
+    private readonly organizationRepository: IOrganizationRepository,
+    private readonly organizationContextService: OrganizationContextService
   ) {}
 
   public async execute(dto: SubmitBreedApplicationDto): Promise<BreedApplication> {
@@ -25,34 +27,23 @@ export class SubmitBreedApplicationUseCase {
       throw new Error('Only presidents or employees can submit breed applications');
     }
 
-    const requesterOrgId = requester.getOrganizationId();
-    if (!requesterOrgId) {
-      throw new Error('Requester has no organization');
+    if (!requester.getOrganizationId()) {
+      throw new Error('User does not belong to any organization');
     }
 
-    let internationalId: string | null = null;
-    let currentOrg = await this.organizationRepository.findById(requesterOrgId);
-    while (currentOrg) {
-      if (currentOrg.getType() === 'international') {
-        internationalId = currentOrg.getId();
-        break;
-      }
-      const parentId = currentOrg.getParentOrganizationId();
-      if (!parentId) break;
-      currentOrg = await this.organizationRepository.findById(parentId);
-    }
-
+    const internationalId = await this.organizationContextService.getInternationalIdForUser(dto.requesterId);
     if (!internationalId) {
-      throw new Error('Could not determine international organization for requester');
+      throw new Error('Cannot determine international organization context for breed application');
     }
 
-    const app = BreedApplication.create({
+    const application = BreedApplication.create({
       names: dto.names,
       requesterId: dto.requesterId,
       internationalId
     });
 
-    await this.breedApplicationRepository.save(app);
-    return app;
+    await this.breedApplicationRepository.save(application);
+
+    return application;
   }
 }

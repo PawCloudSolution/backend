@@ -20,7 +20,7 @@ describe('Auth Flow (E2E) - Refresh Tokens', () => {
     await app.init();
 
     await AppDataSource.initialize();
-    await AppDataSource.synchronize(true); // Drop and recreate schema
+    // await AppDataSource.synchronize(true); // Drop and recreate schema
   });
 
   afterAll(async () => {

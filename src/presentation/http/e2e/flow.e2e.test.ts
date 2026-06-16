@@ -17,7 +17,7 @@ describe('End-to-End User Flow', () => {
     }
     
     // Reset database for clean test run
-    await AppDataSource.synchronize(true);
+    // await AppDataSource.synchronize(true);
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],

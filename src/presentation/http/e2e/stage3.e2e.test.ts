@@ -29,7 +29,7 @@ describe('Stage 3 Flow (E2E) - Dogs and Breeds', () => {
     await app.init();
 
     await AppDataSource.initialize();
-    await AppDataSource.synchronize(true); // Drop and recreate schema
+    // await AppDataSource.synchronize(true); // Drop and recreate schema
 
     // 1. Setup: Create SuperAdmin
     const saRes = await request(app.getHttpServer()).post('/api/v1/auth/register').send({

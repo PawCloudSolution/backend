@@ -8,29 +8,45 @@ import { ApproveBreedApplicationUseCase } from '../../../application/breed/use-c
 import { GetBreedsUseCase } from '../../../application/breed/use-cases/get-breeds.use-case';
 import { RegisterDogUseCase } from '../../../application/dog/use-cases/register-dog.use-case';
 import { GetDogsUseCase } from '../../../application/dog/use-cases/get-dogs.use-case';
+import { AddBreedLanguageUseCase } from '../../../application/breed/use-cases/add-breed-language.use-case';
 import { IBreedRepository } from '../../../application/breed/ports/breed.repository.interface';
 import { IBreedApplicationRepository } from '../../../application/breed/ports/breed-application.repository.interface';
 import { IDogRepository } from '../../../application/dog/ports/dog.repository.interface';
 import { IUserRepository } from '../../../application/auth/ports/user.repository.interface';
 import { IOrganizationRepository } from '../../../application/organization/ports/organization.repository.interface';
+import { OrganizationContextService } from '../../../application/organization/services/organization-context.service';
 
 @Module({
   imports: [DatabaseModule],
   controllers: [BreedController, DogController],
   providers: [
     {
-      provide: CreateBreedUseCase,
-      useFactory: (breedRepo: IBreedRepository, userRepo: IUserRepository, orgRepo: IOrganizationRepository) => {
-        return new CreateBreedUseCase(breedRepo, userRepo, orgRepo);
+      provide: OrganizationContextService,
+      useFactory: (userRepo: IUserRepository, orgRepo: IOrganizationRepository) => {
+        return new OrganizationContextService(userRepo, orgRepo);
       },
-      inject: [BREED_REPOSITORY_TOKEN, USER_REPOSITORY_TOKEN, ORGANIZATION_REPOSITORY_TOKEN]
+      inject: [USER_REPOSITORY_TOKEN, ORGANIZATION_REPOSITORY_TOKEN]
+    },
+    {
+      provide: CreateBreedUseCase,
+      useFactory: (breedRepo: IBreedRepository, userRepo: IUserRepository, orgRepo: IOrganizationRepository, orgCtx: OrganizationContextService) => {
+        return new CreateBreedUseCase(breedRepo, userRepo, orgRepo, orgCtx);
+      },
+      inject: [BREED_REPOSITORY_TOKEN, USER_REPOSITORY_TOKEN, ORGANIZATION_REPOSITORY_TOKEN, OrganizationContextService]
+    },
+    {
+      provide: AddBreedLanguageUseCase,
+      useFactory: (breedRepo: IBreedRepository, orgCtx: OrganizationContextService) => {
+        return new AddBreedLanguageUseCase(breedRepo, orgCtx);
+      },
+      inject: [BREED_REPOSITORY_TOKEN, OrganizationContextService]
     },
     {
       provide: SubmitBreedApplicationUseCase,
-      useFactory: (breedAppRepo: IBreedApplicationRepository, userRepo: IUserRepository, orgRepo: IOrganizationRepository) => {
-        return new SubmitBreedApplicationUseCase(breedAppRepo, userRepo, orgRepo);
+      useFactory: (breedAppRepo: IBreedApplicationRepository, userRepo: IUserRepository, orgRepo: IOrganizationRepository, orgCtx: OrganizationContextService) => {
+        return new SubmitBreedApplicationUseCase(breedAppRepo, userRepo, orgRepo, orgCtx);
       },
-      inject: [BREED_APPLICATION_REPOSITORY_TOKEN, USER_REPOSITORY_TOKEN, ORGANIZATION_REPOSITORY_TOKEN]
+      inject: [BREED_APPLICATION_REPOSITORY_TOKEN, USER_REPOSITORY_TOKEN, ORGANIZATION_REPOSITORY_TOKEN, OrganizationContextService]
     },
     {
       provide: ApproveBreedApplicationUseCase,
@@ -41,10 +57,10 @@ import { IOrganizationRepository } from '../../../application/organization/ports
     },
     {
       provide: GetBreedsUseCase,
-      useFactory: (breedRepo: IBreedRepository) => {
-        return new GetBreedsUseCase(breedRepo);
+      useFactory: (breedRepo: IBreedRepository, orgCtx: OrganizationContextService) => {
+        return new GetBreedsUseCase(breedRepo, orgCtx);
       },
-      inject: [BREED_REPOSITORY_TOKEN]
+      inject: [BREED_REPOSITORY_TOKEN, OrganizationContextService]
     },
     {
       provide: RegisterDogUseCase,

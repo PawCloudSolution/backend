@@ -8,7 +8,8 @@ import { CreateBreedUseCase } from '../../../application/breed/use-cases/create-
 import { SubmitBreedApplicationUseCase } from '../../../application/breed/use-cases/submit-breed-application.use-case';
 import { ApproveBreedApplicationUseCase } from '../../../application/breed/use-cases/approve-breed-application.use-case';
 import { GetBreedsUseCase } from '../../../application/breed/use-cases/get-breeds.use-case';
-import { CreateBreedDtoHttp, SubmitBreedApplicationDtoHttp, ApproveBreedApplicationDtoHttp } from '../dtos/breed.dto';
+import { AddBreedLanguageUseCase } from '../../../application/breed/use-cases/add-breed-language.use-case';
+import { CreateBreedDtoHttp, SubmitBreedApplicationDtoHttp, ApproveBreedApplicationDtoHttp, AddBreedLanguageDtoHttp } from '../dtos/breed.dto';
 
 @ApiTags('Breeds')
 @ApiBearerAuth()
@@ -18,15 +19,17 @@ export class BreedController {
     @Inject(CreateBreedUseCase) private readonly createBreedUseCase: CreateBreedUseCase,
     @Inject(SubmitBreedApplicationUseCase) private readonly submitBreedApplicationUseCase: SubmitBreedApplicationUseCase,
     @Inject(ApproveBreedApplicationUseCase) private readonly approveBreedApplicationUseCase: ApproveBreedApplicationUseCase,
-    @Inject(GetBreedsUseCase) private readonly getBreedsUseCase: GetBreedsUseCase
+    @Inject(GetBreedsUseCase) private readonly getBreedsUseCase: GetBreedsUseCase,
+    @Inject(AddBreedLanguageUseCase) private readonly addBreedLanguageUseCase: AddBreedLanguageUseCase
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'List all available breeds' })
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'List all available breeds for user organization' })
   @ApiResponse({ status: 200, description: 'List of breeds' })
-  public async getBreeds() {
+  public async getBreeds(@CurrentUser() user: any) {
     try {
-      const breeds = await this.getBreedsUseCase.execute();
+      const breeds = await this.getBreedsUseCase.execute(user.id);
       return breeds.map(b => ({
         id: b.getId().toString(),
         names: b.getNames(),
@@ -83,6 +86,27 @@ export class BreedController {
     try {
       const breed = await this.approveBreedApplicationUseCase.execute(id, user.id);
       return { message: 'Application approved successfully', breedId: breed.getId().toString() };
+    } catch (error: any) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Post(':id/languages')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('superAdmin', 'internationalPresident')
+  @ApiOperation({ summary: 'Add or update a language translation for a breed' })
+  @ApiParam({ name: 'id', type: 'string', description: 'Breed ID' })
+  @ApiBody({ type: AddBreedLanguageDtoHttp })
+  @ApiResponse({ status: 200, description: 'Language added successfully' })
+  public async addLanguage(@CurrentUser() user: any, @Param('id') id: string, @Body() body: AddBreedLanguageDtoHttp) {
+    try {
+      await this.addBreedLanguageUseCase.execute({
+        breedId: id,
+        languageCode: body.languageCode,
+        name: body.name,
+        requesterId: user.id
+      });
+      return { message: 'Language added successfully' };
     } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }

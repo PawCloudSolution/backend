@@ -17,7 +17,7 @@ describe('Stage 2 E2E Flow (Employees and Branches)', () => {
     if (!AppDataSource.isInitialized) {
       await AppDataSource.initialize();
     }
-    await AppDataSource.synchronize(true);
+    // await AppDataSource.synchronize(true);
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],

@@ -38,4 +38,15 @@ export class TypeOrmBreedRepository implements IBreedRepository {
       updatedAt: entity.updatedAt,
     }));
   }
+
+  public async findAllByInternationalId(internationalId: string): Promise<Breed[]> {
+    const entities = await this.breedRepository.find({ where: { internationalId } });
+    return entities.map(entity => Breed.restore({
+      id: entity.id,
+      names: entity.names,
+      internationalId: entity.internationalId,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    }));
+  }
 }

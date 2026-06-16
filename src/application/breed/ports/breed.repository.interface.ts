@@ -4,4 +4,5 @@ export interface IBreedRepository {
   save(breed: Breed): Promise<void>;
   findById(id: string): Promise<Breed | null>;
   findAll(): Promise<Breed[]>;
+  findAllByInternationalId(internationalId: string): Promise<Breed[]>;
 }
